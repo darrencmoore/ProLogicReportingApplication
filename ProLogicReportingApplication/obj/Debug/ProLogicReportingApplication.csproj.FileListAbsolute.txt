@@ -1,0 +1,5 @@
+C:\Users\darrenm\Documents\Visual Studio 2015\Projects\ProLogicReportingApplication\ProLogicReportingApplication\obj\Debug\ProLogicReportingApplication.csprojResolveAssemblyReference.cache
+C:\Users\darrenm\Documents\Visual Studio 2015\Projects\ProLogicReportingApplication\ProLogicReportingApplication\obj\Debug\MainWindow.g.cs
+C:\Users\darrenm\Documents\Visual Studio 2015\Projects\ProLogicReportingApplication\ProLogicReportingApplication\obj\Debug\App.g.cs
+C:\Users\darrenm\Documents\Visual Studio 2015\Projects\ProLogicReportingApplication\ProLogicReportingApplication\obj\Debug\ProLogicReportingApplication_MarkupCompile.cache
+C:\Users\darrenm\Documents\Visual Studio 2015\Projects\ProLogicReportingApplication\ProLogicReportingApplication\obj\Debug\ProLogicReportingApplication_MarkupCompile.lref
