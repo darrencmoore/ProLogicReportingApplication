@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Drawing;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -14,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Data.SqlClient;
+using System.Web;
 using Nucleus;
 
 
@@ -62,25 +64,47 @@ namespace ProLogicReportingApplication
         {
                    
             TreeViewItem accountItem = new TreeViewItem();
-            TreeViewItem empItem = new TreeViewItem();
-            var tree = sender as TreeView;
-           
+            TreeViewItem empItem = new TreeViewItem();           
+            var tree = sender as TreeView;                      
 
             for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
-            {               
+            {
+               
                 if(ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
                 {                    
                     accountItem = new TreeViewItem();
-                    accountItem.Header = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "");                    
-                    tree.Items.Add(accountItem);                    
+                    accountItem.Header = new CheckBox()
+                    {
+                       
+                        IsChecked = true,                  
+                        Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "")
+                    };                   
+                    tree.Items.Add(accountItem);
                 }
                 if(ProLogic_zContractContacts[i].Contains("{ Header = Item Level 1 }"))
                 {
-                    empItem = new TreeViewItem(); 
-                    empItem.Header = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "");
+                    empItem = new TreeViewItem();
+                    empItem.Header = new CheckBox()
+                    {
+                        IsChecked = true,
+                        Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "")
+                    }; 
                     accountItem.Items.Add(empItem);
                 }
             }              
-        }       
+        }
+         
+
+        /// <summary>
+        /// This will handle Selected ITem Changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            string dadsd;
+        }
+
+        
     }
 }
