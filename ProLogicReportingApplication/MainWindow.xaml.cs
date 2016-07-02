@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -45,8 +46,8 @@ namespace ProLogicReportingApplication
         public string LoadAccount_AccountContacts(string ID)
         {
             Nucleus.Agent _agent = new Nucleus.Agent();
-            string _nucleusAgent_SelectRequest = ("SELECT * FROM ZContractContacts WHERE Contract = " + "'" + ID + "' ORDER BY AccountName" );            
-            _agent.Select(_nucleusAgent_SelectRequest);            
+            //string _nucleusAgent_SelectRequest = ("SELECT * FROM ZContractContacts WHERE Contract = " + "'" + ID + "' ORDER BY AccountName" );            
+            _agent.Select(ID);            
             ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);
             return null;
         }
@@ -58,25 +59,28 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
-        {            
+        {
+                   
             TreeViewItem accountItem = new TreeViewItem();
             TreeViewItem empItem = new TreeViewItem();
             var tree = sender as TreeView;
+           
+
             for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
             {               
                 if(ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
-                {
+                {                    
                     accountItem = new TreeViewItem();
-                    accountItem.Header = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "");
-                    tree.Items.Add(accountItem);
+                    accountItem.Header = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "");                    
+                    tree.Items.Add(accountItem);                    
                 }
                 if(ProLogic_zContractContacts[i].Contains("{ Header = Item Level 1 }"))
                 {
-                    empItem = new TreeViewItem();
+                    empItem = new TreeViewItem(); 
                     empItem.Header = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "");
                     accountItem.Items.Add(empItem);
                 }
-            }           
-        }
+            }              
+        }       
     }
 }
