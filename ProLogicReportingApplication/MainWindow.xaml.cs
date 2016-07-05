@@ -26,8 +26,10 @@ namespace ProLogicReportingApplication
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window 
-    {
+    {        
         public List<string> ProLogic_zContractContacts = new List<string>();
+        
+        
 
         public MainWindow()
         {
@@ -62,49 +64,84 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
         {
-                   
+
             TreeViewItem accountItem = new TreeViewItem();
-            TreeViewItem empItem = new TreeViewItem();           
-            var tree = sender as TreeView;                      
+            TreeViewItem empItem = new TreeViewItem();
+            TreeViewItem empEmailAddrItem = new TreeViewItem();
+
+            var tree = sender as TreeView;
+           
 
             for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
             {
-               
-                if(ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
-                {                    
+                //AccountName = Level 0               
+                if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
+                {
                     accountItem = new TreeViewItem();
+                    accountItem.Tag = "{ Header = Item Level 0 }";
                     accountItem.Header = new CheckBox()
                     {
-                       
-                        IsChecked = true,                  
+                        IsChecked = true,                        
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "")
-                    };                   
+                    };
+                    accountItem.PreviewMouseLeftButtonDown += test_click;
                     tree.Items.Add(accountItem);
                 }
-                if(ProLogic_zContractContacts[i].Contains("{ Header = Item Level 1 }"))
+                //ContactFullName = Level 1
+                if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 1 }"))
                 {
                     empItem = new TreeViewItem();
+                    empItem.Tag = "{ Header = Item Level 1 }";
                     empItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "")
-                    }; 
+                    };
+                    empItem.PreviewMouseLeftButtonDown += test_click;
                     accountItem.Items.Add(empItem);
                 }
-            }              
+                //Contact Email Address = Level 2
+                if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 2 }"))
+                {
+                    empEmailAddrItem = new TreeViewItem();
+                    empEmailAddrItem.Tag = "{ Header = Item Level 2 }";
+                    empEmailAddrItem.Header = new CheckBox()
+                    {
+                        IsEnabled = false,
+                        IsChecked = true,
+                        Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "")
+                    };
+                    empItem.Items.Add(empEmailAddrItem);
+                }
+            }
+        }       
+
+        private void test_click(object sender, RoutedEventArgs e)
+        {
+            NodeCheck(e.OriginalSource as DependencyObject);
+            //TreeViewItem item = e.OriginalSource as TreeViewItem;
+            //if (item != null)
+            //{
+
+            //}
         }
-         
+
+        private static TreeViewItem NodeCheck(DependencyObject source)
+        {
+            while(source != null && !(source is TreeViewItem)) source = System.Windows.Media.VisualTreeHelper.GetParent(source);
+            Console.WriteLine("Source -> " + source.GetType());
+            //Console.WriteLine("Source -> " + source.GetValue(source));
+            return source as TreeViewItem;
+        }
 
         /// <summary>
-        /// This will handle Selected ITem Changes
+        /// This will handle Selected Item Changes
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             string dadsd;
-        }
-
-        
+        }     
     }
 }
