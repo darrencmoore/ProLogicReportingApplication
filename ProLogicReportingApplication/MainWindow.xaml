@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        <TreeView IsEnabled="True"  x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="300" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" SelectedItemChanged="trvTree_Collapsed" >
+        <TreeView IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="300" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" SelectedItemChanged="trvTree_Collapsed" >
            
         </TreeView>
         <!--<Button x:Name="Select" Content="Select" HorizontalAlignment="Left" Margin="307,145,0,0" VerticalAlignment="Top" Width="75" Click="Select_Click"/>-->
