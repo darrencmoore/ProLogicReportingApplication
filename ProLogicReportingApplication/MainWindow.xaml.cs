@@ -65,73 +65,107 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
-        {
-            
-            
+        {           
             TreeViewItem accountItem = new TreeViewItem();
             TreeViewItem empItem = new TreeViewItem();
             TreeViewItem empEmailAddrItem = new TreeViewItem();
-
             var tree = sender as TreeView;
-           
-
 
             for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
-            {               
-                           
+            {
+                //AccountName = Level 0                       
                 if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
                 {                 
                     accountItem = new TreeViewItem();
-                    accountItem.Tag = "{ Parent = Item Level 0 }";
+                    accountItem.Tag = "{Parent} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "");
+                    accountItem.IsExpanded = true;
                     accountItem.Header = new CheckBox()
                     {
-                        //IsChecked = true,
+                        IsChecked = true,
+                        IsEnabled = true,
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "")
-                };
-                    accountItem.PreviewMouseLeftButtonDown += trvItem_click;
+                    };
+                    //tree.MouseLeftButtonDown += trvSingle_click;
+                    //tree.MouseDoubleClick += trvDouble_click;                    
+                    // Account Item Right Mouse Click Handler
+                    //tree.PreviewMouseRightButtonDown += trvRight_MouseButtonDown;
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
                 if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 1 }"))
                 {                    
                     empItem = new TreeViewItem();
-                    empItem.Tag = "{ Child = Item Level 1 }";
+                    empItem.Tag = "{Child} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "");
                     empItem.Header = new CheckBox()
                     {
-                        //IsChecked = true,
+                        IsChecked = true,
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "")
-                };
-                    empItem.PreviewMouseLeftButtonDown += trvItem_click;
+                    };
+                    //tree.PreviewMouseLeftButtonDown += trvSingle_click;
+                    //tree.MouseDoubleClick += trvDouble_click;
+                    // Employee Item Right Mouse Click Handler
+                    //tree.PreviewMouseRightButtonDown += trvRight_MouseButtonDown;
                     accountItem.Items.Add(empItem);
                 }
                 //Contact Email Address = Level 2
                 if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 2 }"))
                 {                    
                     empEmailAddrItem = new TreeViewItem();
-                    empEmailAddrItem.Tag = "{ Email = Item Level 2 }";
+                    empEmailAddrItem.Tag = "{Email} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
                         IsEnabled = false,
                         IsChecked = true,
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "")
-                };
+                    };
                     empItem.Items.Add(empEmailAddrItem);
                 }
             }
         }
         #endregion
 
-        #region TreeView User Interaction Methods
+        #region Mouse Click Event Handlers        
+        private void trvMouse_SingleClick(object sender, MouseButtonEventArgs e) //RoutedEventArgs
+        {
+            Console.WriteLine("trvSingle_click -> " + e.ClickCount);
+            if (e.RoutedEvent == UIElement.PreviewMouseLeftButtonDownEvent && e.ClickCount != 2)
+            {
+                Console.WriteLine("trvSingle_click -> " + e.ClickCount);
+                e.Handled = true;
+            }
+        }
         /// <summary>
         /// Handler for trvAccount_AccountContacts item click
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void trvItem_click(object sender, RoutedEventArgs e)
+        private void trvMouse_DoubleClick(object sender, MouseButtonEventArgs e) //RoutedEventArgs
         {
-            NodeCheck(e.OriginalSource as DependencyObject);            
-        }
+            Console.WriteLine("trvDouble_click -> " + e.ClickCount);
+            if (e.RoutedEvent == Control.MouseDoubleClickEvent && e.ClickCount != 1)
+            {
+                if(e.Source is TreeViewItem && (e.Source as TreeViewItem).IsSelected)
+                {
+                    Console.WriteLine("trvDouble_click is selected -> " + e.ClickCount);
+                    NodeCheck(e.OriginalSource as DependencyObject);
+                    e.Handled = true;
+                }
+            }
+        }       
 
+        private void trvRightMouseButton_Click(object sender, MouseButtonEventArgs e) //RoutedEventArgs
+        {
+            Console.WriteLine("trvRight_MouseButtonDown -> " + e.ClickCount);
+            e.Handled = true;
+        }
+        #endregion
+
+        #region Preview Mouse Click Events
+        private void previewMouse_DoubleClick(object sender, RoutedEventArgs e)
+        {
+
+        }
+        #endregion
         /// <summary>
         /// This will handle Selected Item Changes
         /// </summary>
@@ -139,8 +173,9 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            string dadsd;
+            Console.WriteLine("TreeView Collapsed");
         }
+        
 
         /// <summary>
         /// 
@@ -149,21 +184,23 @@ namespace ProLogicReportingApplication
         /// <returns></returns>
         private static TreeViewItem NodeCheck(DependencyObject source)
         {
-           
-            while(source != null && !(source is TreeViewItem))
+            while (source != null && !(source is TreeViewItem))
                 source = System.Windows.Media.VisualTreeHelper.GetParent(source);
-            //INotifyPropertyChanged(source);            
-            //Console.WriteLine("Source -> " + source.GetType());
-            //Console.WriteLine("Source -> " + source.ToString());
-            TreeViewItem item = source as TreeViewItem;            
-            Console.WriteLine("Source -> " + item.Parent);
-            Console.WriteLine("Source -> " + item.Header);
-            Console.WriteLine("Source -> " + item.Tag);
-            //item.T
+            TreeViewItem item = source as TreeViewItem;
+                        
+            Console.WriteLine("Source -> " + item.Parent.DependencyObjectType.Name);
+            Console.WriteLine("Source -> " + item.ItemContainerGenerator.Items);
+                                   
+            for(int i = 0; i < item.ItemContainerGenerator.Items.Count; i++)
+            {
+                Console.WriteLine("Item -> " + item.ItemContainerGenerator.Items[i].ToString());
+            }           
+            Console.WriteLine("Header -> " + item.Header);
+            Console.WriteLine("Tag -> " + item.Tag);
             return source as TreeViewItem;
         }
+        
 
-        #endregion
         
     }
 }
