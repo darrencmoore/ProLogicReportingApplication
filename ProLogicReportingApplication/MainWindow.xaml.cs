@@ -94,11 +94,7 @@ namespace ProLogicReportingApplication
                         IsChecked = true,
                         IsEnabled = true,                                                                                                                            
                         Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 0 }", "")
-                    };                                    
-                    //tree.MouseLeftButtonDown += trvSingle_click;
-                    //tree.MouseDoubleClick += trvDouble_click;                    
-                    // Account Item Right Mouse Click Handler
-                    //tree.PreviewMouseRightButtonDown += trvRight_MouseButtonDown;
+                    };                    
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
@@ -112,10 +108,6 @@ namespace ProLogicReportingApplication
                         IsEnabled = true,
                         Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 1 }", "")
                     };
-                    //tree.PreviewMouseLeftButtonDown += trvSingle_click;
-                    //tree.MouseDoubleClick += trvDouble_click;
-                    // Employee Item Right Mouse Click Handler
-                    //tree.PreviewMouseRightButtonDown += trvRight_MouseButtonDown;
                     accountItem.Items.Add(empItem);
                 }
                 //Contact Email Address = Level 2
@@ -268,32 +260,6 @@ namespace ProLogicReportingApplication
             Console.WriteLine("Header -> " + item.Header);          
             Console.WriteLine("Tag -> " + item.Tag);
             return source as TreeViewItem; 
-        }
-
-
-
-        private void ContactsGrid_Loaded(object sender, RoutedEventArgs e)
-        {
-            //for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
-            //{
-            //    if (ProLogic_zContractContacts[i].Contains("{ Account Name }"))
-            //    {
-
-            //    }
-            //}
-            //testList.Add("Test 1");
-            //testList.Add("Test 2");
-            //testList.Add("Test 3");
-            //testList.Add("Test 4");
-            //testList.Add("Test 5");
-            //testList.Add("Test 6");
-            //testList.Add("Test 7");
-            //testList.Add("Test 8");
-            //this.ContactsGrid.ItemsSource = testList;
-            //this.ContactsGrid.DataContext = testList;
-                       
-        }
-
-        
+        }             
     }
 }
