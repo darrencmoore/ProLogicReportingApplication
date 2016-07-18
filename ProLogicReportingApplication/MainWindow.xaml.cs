@@ -29,8 +29,7 @@ namespace ProLogicReportingApplication
     {        
         public List<String> ProLogic_zContractContacts = new List<String>();        
         public ObservableCollection<String> zContractsContactsObservable = new ObservableCollection<String>();
-        private Timer ClickTimer = null;
-        
+        private Timer ClickTimer = null;      
         
         
         public MainWindow()
@@ -42,9 +41,7 @@ namespace ProLogicReportingApplication
             LoadAccount_AccountContacts("00001");
             //this.ContactsGrid.ItemsSource = ProLogic_zContractContacts;
             //ContactsGrid.ItemsSource = ProLogic_zContractContacts.ToList();
-        }
-
-        
+        }        
         
         /// <summary>
         /// Gets called on initialization takes the Contract passed from SYSPRO
@@ -58,9 +55,9 @@ namespace ProLogicReportingApplication
             //string _nucleusAgent_SelectRequest = ("SELECT * FROM ZContractContacts WHERE Contract = " + "'" + ID + "' ORDER BY AccountName" );            
             _agent.Select(ID);
             // Adds the list from Nucleus.Agent                      
-            ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);            
+            ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);
             // Copies ProLogic_zContractContacts to an observable collection
-            // This is to be used for the treeview
+            // This is to be used for the treeview           
             zContractsContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
 
             return null;
@@ -72,32 +69,31 @@ namespace ProLogicReportingApplication
         /// Puts each item in ProLogic_zContractContacts into a TreeViewItem
         /// Heirarchy goes Account => ContactFullName -> Contact Email Address
         /// This gets called from MainWindow.xaml when the TreeView is intially loaded
-        /// As there isnot a OnClick event for TreeView nor the TreeViewItems I had to use PreviewMouseLeftButtonDown
+        /// As there is not a OnClick event for TreeView nor the TreeViewItems I had to use PreviewMouseLeftButtonDown
+        /// changed from using ProLogiz_zContractContacts list to zContractsContactsObservable
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
         {
-             
-
             TreeViewItem accountItem = new TreeViewItem();           
             TreeViewItem empItem = new TreeViewItem();           
             TreeViewItem empEmailAddrItem = new TreeViewItem();
-            var tree = sender as TreeView;     
+            var tree = sender as TreeView;
 
-            for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
+            for (int i = 0; i < zContractsContactsObservable.Count; i++)
             {
                 //AccountName = Level 0                       
-                if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
+                if (zContractsContactsObservable[i].Contains("{ Header = Item Level 0 }"))
                 {                 
                     accountItem = new TreeViewItem(); 
-                    accountItem.Tag = "{Parent} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "");
+                    accountItem.Tag = "{Parent} " + zContractsContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
                     accountItem.IsExpanded = true;                    
                     accountItem.Header = new CheckBox() 
                     {
                         IsChecked = true,
                         IsEnabled = true,                                                                                                                            
-                        Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "")
+                        Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 0 }", "")
                     };                                    
                     //tree.MouseLeftButtonDown += trvSingle_click;
                     //tree.MouseDoubleClick += trvDouble_click;                    
@@ -106,15 +102,15 @@ namespace ProLogicReportingApplication
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
-                if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 1 }"))
+                if (zContractsContactsObservable[i].Contains("{ Header = Item Level 1 }"))
                 {                    
                     empItem = new TreeViewItem();
-                    empItem.Tag = "{Child} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "");
+                    empItem.Tag = "{Child} " + zContractsContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
                     empItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         IsEnabled = true,
-                        Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "")
+                        Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 1 }", "")
                     };
                     //tree.PreviewMouseLeftButtonDown += trvSingle_click;
                     //tree.MouseDoubleClick += trvDouble_click;
@@ -123,15 +119,15 @@ namespace ProLogicReportingApplication
                     accountItem.Items.Add(empItem);
                 }
                 //Contact Email Address = Level 2
-                if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 2 }"))
+                if (zContractsContactsObservable[i].Contains("{ Header = Item Level 2 }"))
                 {                    
                     empEmailAddrItem = new TreeViewItem();
-                    empEmailAddrItem.Tag = "{Email} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrItem.Tag = "{Email} " + zContractsContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
                         IsChecked = true,
-                        IsEnabled = false,                        
-                        Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "")
+                        IsEnabled = false,               
+                        Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
                     };
                     empItem.Items.Add(empEmailAddrItem);
                 }
@@ -173,6 +169,11 @@ namespace ProLogicReportingApplication
         #endregion
         
         #region Preview Mouse Click Events
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
@@ -206,6 +207,12 @@ namespace ProLogicReportingApplication
             }           
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void singleClickTimer(object sender, EventArgs e)
         {           
             ClickTimer.Stop();           
@@ -262,6 +269,8 @@ namespace ProLogicReportingApplication
             Console.WriteLine("Tag -> " + item.Tag);
             return source as TreeViewItem; 
         }
+
+
 
         private void ContactsGrid_Loaded(object sender, RoutedEventArgs e)
         {
