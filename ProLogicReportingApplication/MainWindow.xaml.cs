@@ -17,8 +17,8 @@ using System.Windows.Shapes;
 using System.Data.SqlClient;
 using System.Web;
 using Nucleus;
-
-
+using System.Timers;
+using System.Collections.ObjectModel;
 
 namespace ProLogicReportingApplication
 {    
@@ -27,7 +27,10 @@ namespace ProLogicReportingApplication
     /// </summary>
     public partial class MainWindow : Window 
     {        
-        public List<String> ProLogic_zContractContacts = new List<String>();
+        public List<String> ProLogic_zContractContacts = new List<String>();        
+        //public ObservableCollection<String> testList = new ObservableCollection<String>();
+        private Timer ClickTimer = null;
+        
         
         
         public MainWindow()
@@ -36,8 +39,12 @@ namespace ProLogicReportingApplication
             //string[] args = Environment.GetCommandLineArgs();
             //MessageBox.Show(args[1]);
             // Call to Nucleus to get the data to populate the tree view
-            LoadAccount_AccountContacts("00001");                       
+            LoadAccount_AccountContacts("00001");
+            //this.ContactsGrid.ItemsSource = ProLogic_zContractContacts;
+            //ContactsGrid.ItemsSource = ProLogic_zContractContacts.ToList();
         }
+
+        
         
         /// <summary>
         /// Gets called on initialization takes the Contract passed from SYSPRO
@@ -49,8 +56,13 @@ namespace ProLogicReportingApplication
         {
             Nucleus.Agent _agent = new Nucleus.Agent();
             //string _nucleusAgent_SelectRequest = ("SELECT * FROM ZContractContacts WHERE Contract = " + "'" + ID + "' ORDER BY AccountName" );            
-            _agent.Select(ID);                      
-            ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);
+            _agent.Select(ID);
+            // Adds the list from Nucleus.Agent                      
+            ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);            
+            // Copies ProLogic_zContractContacts to an observable collection
+            // This is to be used for the treeview
+            ObservableCollection<String> zContractsContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
+
             return null;
         }
 
@@ -65,26 +77,28 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
-        {           
-            TreeViewItem accountItem = new TreeViewItem();
-            TreeViewItem empItem = new TreeViewItem();
+        {
+             
+
+            TreeViewItem accountItem = new TreeViewItem();           
+            TreeViewItem empItem = new TreeViewItem();           
             TreeViewItem empEmailAddrItem = new TreeViewItem();
-            var tree = sender as TreeView;
+            var tree = sender as TreeView;     
 
             for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
             {
                 //AccountName = Level 0                       
                 if (ProLogic_zContractContacts[i].Contains("{ Header = Item Level 0 }"))
                 {                 
-                    accountItem = new TreeViewItem();
+                    accountItem = new TreeViewItem(); 
                     accountItem.Tag = "{Parent} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "");
-                    accountItem.IsExpanded = true;
-                    accountItem.Header = new CheckBox()
+                    accountItem.IsExpanded = true;                    
+                    accountItem.Header = new CheckBox() 
                     {
                         IsChecked = true,
-                        IsEnabled = true,
+                        IsEnabled = true,                                                                                                                            
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 0 }", "")
-                    };
+                    };                                    
                     //tree.MouseLeftButtonDown += trvSingle_click;
                     //tree.MouseDoubleClick += trvDouble_click;                    
                     // Account Item Right Mouse Click Handler
@@ -99,6 +113,7 @@ namespace ProLogicReportingApplication
                     empItem.Header = new CheckBox()
                     {
                         IsChecked = true,
+                        IsEnabled = true,
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 1 }", "")
                     };
                     //tree.PreviewMouseLeftButtonDown += trvSingle_click;
@@ -114,58 +129,106 @@ namespace ProLogicReportingApplication
                     empEmailAddrItem.Tag = "{Email} " + ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
-                        IsEnabled = false,
                         IsChecked = true,
+                        IsEnabled = false,                        
                         Content = ProLogic_zContractContacts[i].Replace("{ Header = Item Level 2 }", "")
                     };
                     empItem.Items.Add(empEmailAddrItem);
                 }
             }
         }
-        #endregion
+        #endregion       
 
-        #region Mouse Click Event Handlers        
-        private void trvMouse_SingleClick(object sender, MouseButtonEventArgs e) //RoutedEventArgs
+        #region Mouse Click Event Handlers                    
+        private void trvMouse_SingleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
         {
-            Console.WriteLine("trvSingle_click -> " + e.ClickCount);
-            if (e.RoutedEvent == UIElement.PreviewMouseLeftButtonDownEvent && e.ClickCount != 2)
-            {
-                Console.WriteLine("trvSingle_click -> " + e.ClickCount);
-                e.Handled = true;
-            }
+            e.Handled = true;        
+            Console.WriteLine("you clicked once");
+            Console.WriteLine("trvMouse_SingleClick =>  OriginalSource -> " + e.OriginalSource);
+            Console.WriteLine("trvMouse_SingleClick => RoutedEvent -> " + e.RoutedEvent);
+            Console.WriteLine("trvMouse_SingleClick => Source -> " + e.Source);
         }
+
         /// <summary>
         /// Handler for trvAccount_AccountContacts item click
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void trvMouse_DoubleClick(object sender, MouseButtonEventArgs e) //RoutedEventArgs
-        {
-            Console.WriteLine("trvDouble_click -> " + e.ClickCount);
-            if (e.RoutedEvent == Control.MouseDoubleClickEvent && e.ClickCount != 1)
-            {
-                if(e.Source is TreeViewItem && (e.Source as TreeViewItem).IsSelected)
-                {
-                    Console.WriteLine("trvDouble_click is selected -> " + e.ClickCount);
-                    NodeCheck(e.OriginalSource as DependencyObject);
-                    e.Handled = true;
-                }
-            }
+        private void trvMouse_DoubleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
+        {            
+            e.Handled = true;
+            Console.WriteLine("you clicked twice");
+            Console.WriteLine("trvMouse_DoubleClick =>  OriginalSource -> " + e.OriginalSource);
+            Console.WriteLine("trvMouse_DoubleClick => RoutedEvent -> " + e.RoutedEvent);
+            Console.WriteLine("trvMouse_DoubleClick => Source -> " + e.Source);
         }       
 
-        private void trvRightMouseButton_Click(object sender, MouseButtonEventArgs e) //RoutedEventArgs
+        private void trvRightMouseButton_Click(object sender, RoutedEventArgs e) //RoutedEventArgs
         {
-            Console.WriteLine("trvRight_MouseButtonDown -> " + e.ClickCount);
             e.Handled = true;
+            Console.WriteLine("trvRightMouseButton_Click =>  OriginalSource -> " + e.OriginalSource);
+            Console.WriteLine("trvRightMouseButton_Click => RoutedEvent -> " + e.RoutedEvent);
+            Console.WriteLine("trvRightMouseButton_Click => Source -> " + e.Source);
         }
         #endregion
-
+        
         #region Preview Mouse Click Events
-        private void previewMouse_DoubleClick(object sender, RoutedEventArgs e)
+        private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
         {
-
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                if(ClickTimer == null)
+                {
+                    ClickTimer = new Timer(300);                    
+                    ClickTimer.Elapsed += new ElapsedEventHandler(singleClickTimer);                        
+                }
+                if(!ClickTimer.Enabled)
+                {
+                    //Clicked Once                    
+                    ClickTimer.Start();
+                    Console.WriteLine(e.ClickCount);
+                    Console.WriteLine(e.RoutedEvent);
+                    Console.WriteLine(e.OriginalSource);
+                    
+                                    
+                    //NodeCheck(e.OriginalSource as DependencyObject);                                                                                          
+                    //trvMouse_SingleClick(sender, e);
+                    Console.WriteLine(e.ClickCount);
+                }
+                else 
+                {
+                    //Click Twice
+                    ClickTimer.Stop();                   
+                    Console.WriteLine("Double Click ->" + e.ClickCount);
+                    trvMouse_DoubleClick(sender, e);                   
+                }
+                //IsHitTestVisible = true;                  
+            }           
         }
+
+        private void singleClickTimer(object sender, EventArgs e)
+        {           
+            ClickTimer.Stop();           
+            Console.WriteLine("timer stopped");            
+        }
+
+        //private void previewMouse_DoubleClick(object sender, MouseButtonEventArgs e)
+        //{
+        //    e.Handled = true;
+        //    Console.WriteLine("previewMouse_DoubleClick => " + e.OriginalSource);
+        //    Console.WriteLine("previewMouse_DoubleClick => " + e.RoutedEvent);
+        //    Console.WriteLine("previewMouse_DoubleClick => " + e.Source);
+        //}
+
+        //private void previewRightMouseButton_Click(object sender, MouseButtonEventArgs e)
+        //{
+        //    e.Handled = true;
+        //    Console.WriteLine("previewRightMouseButton_Click => " + e.OriginalSource);
+        //    Console.WriteLine("previewRightMouseButton_Click => " + e.RoutedEvent);
+        //    Console.WriteLine("previewRightMouseButton_Click => " + e.Source);
+        //}
         #endregion
+
         /// <summary>
         /// This will handle Selected Item Changes
         /// </summary>
@@ -178,7 +241,7 @@ namespace ProLogicReportingApplication
         
 
         /// <summary>
-        /// 
+        ///  
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
@@ -192,14 +255,35 @@ namespace ProLogicReportingApplication
             Console.WriteLine("Source -> " + item.ItemContainerGenerator.Items);
                                    
             for(int i = 0; i < item.ItemContainerGenerator.Items.Count; i++)
-            {
+            {               
                 Console.WriteLine("Item -> " + item.ItemContainerGenerator.Items[i].ToString());
             }           
-            Console.WriteLine("Header -> " + item.Header);
+            Console.WriteLine("Header -> " + item.Header);          
             Console.WriteLine("Tag -> " + item.Tag);
-            return source as TreeViewItem;
+            return source as TreeViewItem; 
         }
-        
+
+        private void ContactsGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            //for (int i = 0; i < ProLogic_zContractContacts.Count; i++)
+            //{
+            //    if (ProLogic_zContractContacts[i].Contains("{ Account Name }"))
+            //    {
+
+            //    }
+            //}
+            //testList.Add("Test 1");
+            //testList.Add("Test 2");
+            //testList.Add("Test 3");
+            //testList.Add("Test 4");
+            //testList.Add("Test 5");
+            //testList.Add("Test 6");
+            //testList.Add("Test 7");
+            //testList.Add("Test 8");
+            //this.ContactsGrid.ItemsSource = testList;
+            //this.ContactsGrid.DataContext = testList;
+                       
+        }
 
         
     }
