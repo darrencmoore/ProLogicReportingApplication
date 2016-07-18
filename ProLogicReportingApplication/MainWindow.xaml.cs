@@ -28,7 +28,7 @@ namespace ProLogicReportingApplication
     public partial class MainWindow : Window 
     {        
         public List<String> ProLogic_zContractContacts = new List<String>();        
-        public ObservableCollection<String> zContractsContactsObservable = new ObservableCollection<String>();
+        public ObservableCollection<String> zContractContactsObservable = new ObservableCollection<String>();
         private Timer ClickTimer = null;      
         
         
@@ -58,7 +58,7 @@ namespace ProLogicReportingApplication
             ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview           
-            zContractsContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
+            zContractContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
 
             return null;
         }
@@ -81,45 +81,45 @@ namespace ProLogicReportingApplication
             TreeViewItem empEmailAddrItem = new TreeViewItem();
             var tree = sender as TreeView;
 
-            for (int i = 0; i < zContractsContactsObservable.Count; i++)
+            for (int i = 0; i < zContractContactsObservable.Count; i++)
             {
                 //AccountName = Level 0                       
-                if (zContractsContactsObservable[i].Contains("{ Header = Item Level 0 }"))
+                if (zContractContactsObservable[i].Contains("{ Header = Item Level 0 }"))
                 {                 
                     accountItem = new TreeViewItem(); 
-                    accountItem.Tag = "{Parent} " + zContractsContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
+                    accountItem.Tag = "{Parent} " + zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
                     accountItem.IsExpanded = true;                    
                     accountItem.Header = new CheckBox() 
                     {
                         IsChecked = true,
                         IsEnabled = true,                                                                                                                            
-                        Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 0 }", "")
+                        Content = zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "")
                     };                    
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
-                if (zContractsContactsObservable[i].Contains("{ Header = Item Level 1 }"))
+                if (zContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
                 {                    
                     empItem = new TreeViewItem();
-                    empItem.Tag = "{Child} " + zContractsContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
+                    empItem.Tag = "{Child} " + zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
                     empItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         IsEnabled = true,
-                        Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 1 }", "")
+                        Content = zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "")
                     };
                     accountItem.Items.Add(empItem);
                 }
                 //Contact Email Address = Level 2
-                if (zContractsContactsObservable[i].Contains("{ Header = Item Level 2 }"))
+                if (zContractContactsObservable[i].Contains("{ Header = Item Level 2 }"))
                 {                    
                     empEmailAddrItem = new TreeViewItem();
-                    empEmailAddrItem.Tag = "{Email} " + zContractsContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrItem.Tag = "{Email} " + zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         IsEnabled = false,               
-                        Content = zContractsContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
+                        Content = zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
                     };
                     empItem.Items.Add(empEmailAddrItem);
                 }
@@ -146,7 +146,7 @@ namespace ProLogicReportingApplication
         {            
             e.Handled = true;
             Console.WriteLine("you clicked twice");
-            Console.WriteLine("trvMouse_DoubleClick =>  OriginalSource -> " + e.OriginalSource);
+            Console.WriteLine("trvMouse_DoubleClick => OriginalSource -> " + e.OriginalSource);
             Console.WriteLine("trvMouse_DoubleClick => RoutedEvent -> " + e.RoutedEvent);
             Console.WriteLine("trvMouse_DoubleClick => Source -> " + e.Source);
         }       
