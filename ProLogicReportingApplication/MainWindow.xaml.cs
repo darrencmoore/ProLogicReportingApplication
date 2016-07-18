@@ -28,7 +28,7 @@ namespace ProLogicReportingApplication
     public partial class MainWindow : Window 
     {        
         public List<String> ProLogic_zContractContacts = new List<String>();        
-        //public ObservableCollection<String> testList = new ObservableCollection<String>();
+        public ObservableCollection<String> zContractsContactsObservable = new ObservableCollection<String>();
         private Timer ClickTimer = null;
         
         
@@ -61,7 +61,7 @@ namespace ProLogicReportingApplication
             ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);            
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview
-            ObservableCollection<String> zContractsContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
+            zContractsContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
 
             return null;
         }
