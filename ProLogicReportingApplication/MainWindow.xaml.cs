@@ -20,6 +20,9 @@ using Nucleus;
 using System.Timers;
 using System.Collections.ObjectModel;
 
+
+
+
 namespace ProLogicReportingApplication
 {    
     /// <summary>
@@ -29,8 +32,7 @@ namespace ProLogicReportingApplication
     {        
         public List<String> ProLogic_zContractContacts = new List<String>();        
         public ObservableCollection<String> zContractContactsObservable = new ObservableCollection<String>();
-        private Timer ClickTimer = null;      
-        
+            
         
         public MainWindow()
         {
@@ -52,7 +54,6 @@ namespace ProLogicReportingApplication
         public string LoadAccount_AccountContacts(string ID)
         {
             Nucleus.Agent _agent = new Nucleus.Agent();
-            //string _nucleusAgent_SelectRequest = ("SELECT * FROM ZContractContacts WHERE Contract = " + "'" + ID + "' ORDER BY AccountName" );            
             _agent.Select(ID);
             // Adds the list from Nucleus.Agent                      
             ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);
@@ -88,13 +89,14 @@ namespace ProLogicReportingApplication
                 {                 
                     accountItem = new TreeViewItem(); 
                     accountItem.Tag = "{Parent} " + zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
-                    accountItem.IsExpanded = true;                    
+                    accountItem.IsExpanded = false;                                       
                     accountItem.Header = new CheckBox() 
                     {
                         IsChecked = true,
-                        IsEnabled = true,                                                                                                                            
+                        IsEnabled = true,
+                        Focusable = true,                                                                                                                                   
                         Content = zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "")
-                    };                    
+                    };                   
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
@@ -106,6 +108,7 @@ namespace ProLogicReportingApplication
                     {
                         IsChecked = true,
                         IsEnabled = true,
+                        Focusable = true,
                         Content = zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "")
                     };
                     accountItem.Items.Add(empItem);
@@ -129,35 +132,15 @@ namespace ProLogicReportingApplication
 
         #region Mouse Click Event Handlers                    
         private void trvMouse_SingleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
-        {
-            e.Handled = true;        
+        {            
+            // know that IsChecked = False actually is True            
+            e.Handled = true;
             Console.WriteLine("you clicked once");
             Console.WriteLine("trvMouse_SingleClick =>  OriginalSource -> " + e.OriginalSource);
             Console.WriteLine("trvMouse_SingleClick => RoutedEvent -> " + e.RoutedEvent);
             Console.WriteLine("trvMouse_SingleClick => Source -> " + e.Source);
-        }
-
-        /// <summary>
-        /// Handler for trvAccount_AccountContacts item click
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void trvMouse_DoubleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
-        {            
-            e.Handled = true;
-            Console.WriteLine("you clicked twice");
-            Console.WriteLine("trvMouse_DoubleClick => OriginalSource -> " + e.OriginalSource);
-            Console.WriteLine("trvMouse_DoubleClick => RoutedEvent -> " + e.RoutedEvent);
-            Console.WriteLine("trvMouse_DoubleClick => Source -> " + e.Source);
-        }       
-
-        private void trvRightMouseButton_Click(object sender, RoutedEventArgs e) //RoutedEventArgs
-        {
-            e.Handled = true;
-            Console.WriteLine("trvRightMouseButton_Click =>  OriginalSource -> " + e.OriginalSource);
-            Console.WriteLine("trvRightMouseButton_Click => RoutedEvent -> " + e.RoutedEvent);
-            Console.WriteLine("trvRightMouseButton_Click => Source -> " + e.Source);
-        }
+            return;
+        }        
         #endregion
         
         #region Preview Mouse Click Events
@@ -167,65 +150,16 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left)
+        {            
+            if (e.ChangedButton == MouseButton.Left && e.ClickCount == 1)
             {
-                if(ClickTimer == null)
-                {
-                    ClickTimer = new Timer(300);                    
-                    ClickTimer.Elapsed += new ElapsedEventHandler(singleClickTimer);                        
-                }
-                if(!ClickTimer.Enabled)
-                {
-                    //Clicked Once                    
-                    ClickTimer.Start();
-                    Console.WriteLine(e.ClickCount);
-                    Console.WriteLine(e.RoutedEvent);
-                    Console.WriteLine(e.OriginalSource);
-                    
-                                    
-                    //NodeCheck(e.OriginalSource as DependencyObject);                                                                                          
-                    //trvMouse_SingleClick(sender, e);
-                    Console.WriteLine(e.ClickCount);
-                }
-                else 
-                {
-                    //Click Twice
-                    ClickTimer.Stop();                   
-                    Console.WriteLine("Double Click ->" + e.ClickCount);
-                    trvMouse_DoubleClick(sender, e);                   
-                }
-                //IsHitTestVisible = true;                  
+                Console.WriteLine("Click Count-> "  + e.ClickCount);
+                trvMouse_SingleClick(sender, e);
+                e.Handled = true;
+                NodeCheck(e.OriginalSource as DependencyObject);
+                return;                
             }           
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void singleClickTimer(object sender, EventArgs e)
-        {           
-            ClickTimer.Stop();           
-            Console.WriteLine("timer stopped");            
-        }
-
-        //private void previewMouse_DoubleClick(object sender, MouseButtonEventArgs e)
-        //{
-        //    e.Handled = true;
-        //    Console.WriteLine("previewMouse_DoubleClick => " + e.OriginalSource);
-        //    Console.WriteLine("previewMouse_DoubleClick => " + e.RoutedEvent);
-        //    Console.WriteLine("previewMouse_DoubleClick => " + e.Source);
-        //}
-
-        //private void previewRightMouseButton_Click(object sender, MouseButtonEventArgs e)
-        //{
-        //    e.Handled = true;
-        //    Console.WriteLine("previewRightMouseButton_Click => " + e.OriginalSource);
-        //    Console.WriteLine("previewRightMouseButton_Click => " + e.RoutedEvent);
-        //    Console.WriteLine("previewRightMouseButton_Click => " + e.Source);
-        //}
+        }                
         #endregion
 
         /// <summary>
@@ -236,8 +170,7 @@ namespace ProLogicReportingApplication
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Console.WriteLine("TreeView Collapsed");
-        }
-        
+        }        
 
         /// <summary>
         ///  
@@ -250,16 +183,34 @@ namespace ProLogicReportingApplication
                 source = System.Windows.Media.VisualTreeHelper.GetParent(source);
             TreeViewItem item = source as TreeViewItem;
                         
-            Console.WriteLine("Source -> " + item.Parent.DependencyObjectType.Name);
-            Console.WriteLine("Source -> " + item.ItemContainerGenerator.Items);
-                                   
-            for(int i = 0; i < item.ItemContainerGenerator.Items.Count; i++)
-            {               
-                Console.WriteLine("Item -> " + item.ItemContainerGenerator.Items[i].ToString());
-            }           
-            Console.WriteLine("Header -> " + item.Header);          
-            Console.WriteLine("Tag -> " + item.Tag);
-            return source as TreeViewItem; 
-        }             
+            try
+            {
+                if (item != null)
+                {
+                    for (int i = 0; i < item.ItemContainerGenerator.Items.Count; i++)
+                    {
+                        Console.WriteLine("Item Generator -> " + item.ItemContainerGenerator.Items[i].ToString());
+                    }
+                    Console.WriteLine("Item Name -> " + item);
+                    Console.WriteLine("Item Parent -> " + item.Parent);
+                    Console.WriteLine("Item Header -> " + item.Header);
+                    Console.WriteLine("Item Tag -> " + item.Tag);
+
+                    if (item.Tag.ToString().Contains("{Parent}"))
+                    {                        
+                        Console.WriteLine("Parent");                        
+                    }
+                    if (item.Tag.ToString().Contains("{Child}"))
+                    {
+                        Console.WriteLine("Child");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+            return item as TreeViewItem;
+        }
     }
 }
