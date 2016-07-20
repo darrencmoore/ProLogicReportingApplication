@@ -19,6 +19,7 @@ using System.Web;
 using Nucleus;
 using System.Timers;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 
 /// <summary>
 /// Created By Darren Moore
@@ -34,8 +35,9 @@ namespace ProLogicReportingApplication
     {        
         public List<String> ProLogic_zContractContacts = new List<String>();        
         public ObservableCollection<String> zContractContactsObservable = new ObservableCollection<String>();
-            
-        
+        private Timer _mouseClickTimer = null;
+        private int timesThrough;
+
         public MainWindow()
         {
             InitializeComponent();            
@@ -171,25 +173,64 @@ namespace ProLogicReportingApplication
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
+        [DllImport("user32.dll")]
+        static extern uint GetDoubleClickTime();
         private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
-        {            
-            if (e.ChangedButton == MouseButton.Left && e.ClickCount == 1)
-            {                
-                Console.WriteLine("Click Count-> "  + e.ClickCount);                
-                //trvMouse_SingleClick(sender, e);
-                e.Handled = true;               
-                NodeCheck(e.OriginalSource as DependencyObject);                                
-                return;                
+        {
+            //_mouseClickTimer = null;
+                     
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                
+                    _mouseClickTimer = new Timer(GetDoubleClickTime());
+                    _mouseClickTimer.AutoReset = false;
+                _mouseClickTimer.Elapsed += new ElapsedEventHandler(MouseClickTimer);
+                    
+
+                if (!_mouseClickTimer.Enabled)
+                {
+                    timesThrough++;
+                    Console.WriteLine("Times through -> " + timesThrough);
+                    _mouseClickTimer.Start();
+
+                    //e.Handled = true;
+                }
+                //else
+                //{
+                //    _mouseClickTimer.Stop();
+                //    trvMouse_DoubleClick(sender, e);
+                //    e.Handled = true;
+                //}
+                    ////////////////////////////////////
+                    //// you may decide to keep this
+                    //////////////////////////////////////////////             
+                //    Console.WriteLine("Click Count-> "  + e.ClickCount);                
+                ////trvMouse_SingleClick(sender, e);
+                //e.Handled = true;               
+                //NodeCheck(e.OriginalSource as DependencyObject);                                
+                //return;                
             }           
-        }                
+        }
         #endregion
 
-        /// <summary>
-        /// This will handle Selected Item Changes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
+
+        private void MouseClickTimer(object sender, ElapsedEventArgs e)
+        {
+            
+            _mouseClickTimer.Stop();
+            Console.WriteLine(timesThrough);
+            timesThrough = 0;
+            Console.WriteLine("Times through -> " + timesThrough);        
+            Console.WriteLine("timer stopped - Call Method");           
+
+        }
+
+    /// <summary>
+    /// This will handle Selected Item Changes
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Console.WriteLine("TreeView Collapsed");
         }        
