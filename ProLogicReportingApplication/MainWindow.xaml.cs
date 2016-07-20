@@ -20,7 +20,9 @@ using Nucleus;
 using System.Timers;
 using System.Collections.ObjectModel;
 
-
+/// <summary>
+/// Created By Darren Moore
+/// </summary>
 
 
 namespace ProLogicReportingApplication
@@ -77,7 +79,7 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
         {
-            TreeViewItem accountItem = new TreeViewItem();           
+            TreeViewItem accountItem = new TreeViewItem();
             TreeViewItem empItem = new TreeViewItem();           
             TreeViewItem empEmailAddrItem = new TreeViewItem();
             var tree = sender as TreeView;
@@ -89,14 +91,17 @@ namespace ProLogicReportingApplication
                 {                 
                     accountItem = new TreeViewItem(); 
                     accountItem.Tag = "{Parent} " + zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
-                    accountItem.IsExpanded = false;                                       
-                    accountItem.Header = new CheckBox() 
+                    accountItem.IsExpanded = false;
+                    accountItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
+                    accountItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         IsEnabled = true,
-                        Focusable = true,                                                                                                                                   
+                        Focusable = true,
+                        //IsThreeState = true,                        
+                        Name = "ParentChkBox",                                                
                         Content = zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "")
-                    };                   
+                    };
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
@@ -104,11 +109,13 @@ namespace ProLogicReportingApplication
                 {                    
                     empItem = new TreeViewItem();
                     empItem.Tag = "{Child} " + zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
+                    empItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
                     empItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         IsEnabled = true,
                         Focusable = true,
+                        Name = "ChildChkBox",
                         Content = zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "")
                     };
                     accountItem.Items.Add(empItem);
@@ -118,10 +125,11 @@ namespace ProLogicReportingApplication
                 {                    
                     empEmailAddrItem = new TreeViewItem();
                     empEmailAddrItem.Tag = "{Email} " + zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
                         IsChecked = true,
-                        IsEnabled = false,               
+                        IsEnabled = false,
                         Content = zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
                     };
                     empItem.Items.Add(empEmailAddrItem);
@@ -132,17 +140,31 @@ namespace ProLogicReportingApplication
 
         #region Mouse Click Event Handlers                    
         private void trvMouse_SingleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
-        {            
-            // know that IsChecked = False actually is True            
+        {              
             e.Handled = true;
-            Console.WriteLine("you clicked once");
-            Console.WriteLine("trvMouse_SingleClick =>  OriginalSource -> " + e.OriginalSource);
-            Console.WriteLine("trvMouse_SingleClick => RoutedEvent -> " + e.RoutedEvent);
-            Console.WriteLine("trvMouse_SingleClick => Source -> " + e.Source);
+            //Console.WriteLine("you clicked once");
+            //Console.WriteLine("trvMouse_SingleClick =>  OriginalSource -> " + e.OriginalSource);
+            //Console.WriteLine("trvMouse_SingleClick => RoutedEvent -> " + e.RoutedEvent);
+            //Console.WriteLine("trvMouse_SingleClick => Source -> " + e.Source);
             return;
-        }        
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void trvMouse_DoubleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
+        {
+            e.Handled = true;
+            Console.WriteLine("you clicked twice");
+            Console.WriteLine("trvMouse_DoubleClick => OriginalSource -> " + e.OriginalSource);
+            Console.WriteLine("trvMouse_DoubleClick => RoutedEvent -> " + e.RoutedEvent);
+            Console.WriteLine("trvMouse_DoubleClick => Source -> " + e.Source);
+            return;
+        }
         #endregion
-        
+
         #region Preview Mouse Click Events
         /// <summary>
         /// 
@@ -152,11 +174,11 @@ namespace ProLogicReportingApplication
         private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
         {            
             if (e.ChangedButton == MouseButton.Left && e.ClickCount == 1)
-            {
-                Console.WriteLine("Click Count-> "  + e.ClickCount);
-                trvMouse_SingleClick(sender, e);
-                e.Handled = true;
-                NodeCheck(e.OriginalSource as DependencyObject);
+            {                
+                Console.WriteLine("Click Count-> "  + e.ClickCount);                
+                //trvMouse_SingleClick(sender, e);
+                e.Handled = true;               
+                NodeCheck(e.OriginalSource as DependencyObject);                                
                 return;                
             }           
         }                
@@ -173,7 +195,8 @@ namespace ProLogicReportingApplication
         }        
 
         /// <summary>
-        ///  
+        ///  Handling parent and child clicks here
+        ///  this is the primary UI function for checkbox manipulation
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
@@ -181,7 +204,7 @@ namespace ProLogicReportingApplication
         {
             while (source != null && !(source is TreeViewItem))
                 source = System.Windows.Media.VisualTreeHelper.GetParent(source);
-            TreeViewItem item = source as TreeViewItem;
+            TreeViewItem item = source as TreeViewItem;            
                         
             try
             {
@@ -195,16 +218,38 @@ namespace ProLogicReportingApplication
                     Console.WriteLine("Item Parent -> " + item.Parent);
                     Console.WriteLine("Item Header -> " + item.Header);
                     Console.WriteLine("Item Tag -> " + item.Tag);
-
+                                       
                     if (item.Tag.ToString().Contains("{Parent}"))
                     {                        
                         Console.WriteLine("Parent");
+                        item.Focusable = true;
                         item.IsSelected = true;
+                        ContentPresenter parentTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
+                        CheckBox parentTreeItemChkBox = item.Header as CheckBox;
+                        Console.WriteLine(parentTreeItemContentPresenter);
+                        if(parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
+                        {                           
+                            if (parentTreeItemChkBox.IsChecked == true) 
+                            {
+                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
+                            }
+                            else if (parentTreeItemChkBox.IsChecked == false)
+                            {
+                                Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);
+                            }                            
+                        }
                     }
                     if (item.Tag.ToString().Contains("{Child}"))
                     {
                         Console.WriteLine("Child");
+                        item.Focusable = true;
                         item.IsSelected = true;
+                        ContentPresenter childTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
+                        CheckBox childTreeItemChkBox = item.Header as CheckBox;
+                        if (childTreeItemContentPresenter != null && childTreeItemChkBox.Name.ToString() == "ChildChkBox")
+                        {
+
+                        }
                     }
                 }
             }
