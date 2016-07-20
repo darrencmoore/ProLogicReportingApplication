@@ -198,11 +198,13 @@ namespace ProLogicReportingApplication
 
                     if (item.Tag.ToString().Contains("{Parent}"))
                     {                        
-                        Console.WriteLine("Parent");                        
+                        Console.WriteLine("Parent");
+                        item.IsSelected = true;
                     }
                     if (item.Tag.ToString().Contains("{Child}"))
                     {
                         Console.WriteLine("Child");
+                        item.IsSelected = true;
                     }
                 }
             }
@@ -210,7 +212,7 @@ namespace ProLogicReportingApplication
             {
                 Console.WriteLine(e.ToString());
             }
-            return item as TreeViewItem;
+            return item as TreeViewItem;            
         }
     }
 }
