@@ -3,16 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpfTool="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit" 
         xmlns:local="clr-namespace:ProLogicReportingApplication"
         mc:Ignorable="d"
-        Title="MainWindow" Height="1050" Width="1525">
+        Title="Bid Email Send" Height="1050" Width="1525">
     <Grid>
-        <TreeView VirtualizingStackPanel.IsVirtualizing="True" PreviewMouseLeftButtonDown="previewMouse_SingleClick" IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="600" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" SelectedItemChanged="trvTree_Collapsed" >
-            <!--<CheckBox IsChecked="True"></CheckBox>-->
+        <TreeView VirtualizingStackPanel.IsVirtualizing="True" PreviewMouseLeftButtonDown="previewMouse_SingleClick" IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="600" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" SelectedItemChanged="trvTree_Collapsed" >           
+                <!--<CheckBox IsChecked="True"></CheckBox>-->
             <TreeView.Resources>
                 <SolidColorBrush Color="LightBlue" x:Key="{x:Static SystemColors.HighlightBrushKey}"/>
             </TreeView.Resources>
         </TreeView>
+        
         <Button x:Name="btn_SendBid" Content="Send" HorizontalAlignment="Left" Margin="1432,0,0,0" VerticalAlignment="Top" Width="75" Click="btn_SendBid_Click"/>
         <!--<Button x:Name="Select" Content="Select" HorizontalAlignment="Left" Margin="307,145,0,0" VerticalAlignment="Top" Width="75" Click="Select_Click"/>-->
     </Grid>
