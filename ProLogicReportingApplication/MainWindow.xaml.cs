@@ -20,6 +20,9 @@ using Nucleus;
 using System.Timers;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
+using System.Net;
+using System.Net.Mail;
+
 
 /// <summary>
 /// Created By Darren Moore
@@ -73,7 +76,8 @@ namespace ProLogicReportingApplication
         /// <summary>
         /// Tree View - loops over the list returned from Nucleus _agent SELECT statement
         /// Puts each item in ProLogic_zContractContacts into a TreeViewItem
-        /// Heirarchy goes Account => ContactFullName -> Contact Email Address
+        /// Heirarchy goes Account => ContactFullName -> Contact Email Address. 
+        /// I'm also using the account and for the report generation parameters needed are Account and Contract
         /// This gets called from MainWindow.xaml when the TreeView is intially loaded
         /// As there is not a OnClick event for TreeView nor the TreeViewItems I had to use PreviewMouseLeftButtonDown
         /// changed from using ProLogiz_zContractContacts list to zContractsContactsObservable
@@ -207,7 +211,11 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void MouseClickTimer(object sender, ElapsedEventArgs e)
         {  
             _mouseClickTimer.Stop();
@@ -217,12 +225,12 @@ namespace ProLogicReportingApplication
             //Console.WriteLine("timer stopped - Call Method");
         }
 
-    /// <summary>
-    /// This will handle Selected Item Changes
-    /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e"></param>
-    private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
+        /// <summary>
+        /// This will handle Selected Item Changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Console.WriteLine("TreeView Collapsed");
         }        
@@ -294,6 +302,17 @@ namespace ProLogicReportingApplication
                 }
             }            
             return item as TreeViewItem;            
+        }
+
+
+        /// <summary>
+        /// Bid Email Send
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_SendBid_Click(object sender, RoutedEventArgs e)
+        {
+            // Add smtp email stuff here
         }
     }
 }
