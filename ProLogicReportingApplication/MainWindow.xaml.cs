@@ -44,7 +44,7 @@ namespace ProLogicReportingApplication
 
         public MainWindow()
         {
-            InitializeComponent();            
+            InitializeComponent();
             //string[] args = Environment.GetCommandLineArgs();
             //MessageBox.Show(args[1]);
             // Call to Nucleus to get the data to populate the tree view
@@ -203,6 +203,7 @@ namespace ProLogicReportingApplication
                     }
                     if(userClicks >= 2)
                     {
+                        Console.WriteLine("2 clicks just once");
                         e.Handled = true;
                         return;
                     }   
