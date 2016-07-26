@@ -36,8 +36,8 @@ namespace ProLogicReportingApplication
     /// </summary>
     public partial class MainWindow : Window 
     {        
-        private List<String> ProLogic_zContractContacts = new List<String>();        
-        private ObservableCollection<String> zContractContactsObservable = new ObservableCollection<String>();
+        private List<String> proLogic_ContractContacts = new List<String>();        
+        private ObservableCollection<String> proLogic_ContractContactsObservable = new ObservableCollection<String>();
         private Timer _mouseClickTimer = null;
         private bool clickHandled = false;       
         private int userClicks;
@@ -46,33 +46,53 @@ namespace ProLogicReportingApplication
         {
             InitializeComponent();
             //string[] args = Environment.GetCommandLineArgs();
-            //MessageBox.Show(args[1]);
+            //MessageBox.Show(args[1]); pass args[1] to LoadContacts when live
             // Call to Nucleus to get the data to populate the tree view
-            LoadAccount_AccountContacts("00002");
+            LoadContacts("00002");
             //this.ContactsGrid.ItemsSource = ProLogic_zContractContacts;
             //ContactsGrid.ItemsSource = ProLogic_zContractContacts.ToList();
-        }        
-        
+        }
+
         /// <summary>
         /// Gets called on initialization takes the Contract passed from SYSPRO
         /// This method also calls on Nucleus.dll for the SELECT statement 
         /// </summary>
-        /// <param name="ID"></param>
+        /// <param name="contractId"></param>
         /// <returns></returns>
-        public string LoadAccount_AccountContacts(string ID)
+        public string LoadContacts(string contractId)
         {
             Nucleus.Agent _agent = new Nucleus.Agent();
-            _agent.Select(ID);
+            _agent.GetContacts(contractId);
             // Adds the list from Nucleus.Agent                      
-            ProLogic_zContractContacts.AddRange(_agent.getProLogic_zContractContacts);
+            proLogic_ContractContacts.AddRange(_agent.getAgent_ContactsResponse);
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview           
-            zContractContactsObservable = new ObservableCollection<String>(ProLogic_zContractContacts);
+            proLogic_ContractContactsObservable = new ObservableCollection<String>(proLogic_ContractContacts);
 
             return null;
         }
 
-        #region TreeViewLoadMethod
+        /// <summary>
+        /// This will handle Selected Item Changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            Console.WriteLine("TreeView Collapsed");
+        }
+
+        /// <summary>
+        /// Bid Email Send
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_SendBid_Click(object sender, RoutedEventArgs e)
+        {
+            // Add smtp email stuff here
+        }
+
+        #region TreeView Load 
         /// <summary>
         /// Tree View - loops over the list returned from Nucleus _agent SELECT statement
         /// Puts each item in ProLogic_zContractContacts into a TreeViewItem
@@ -91,17 +111,17 @@ namespace ProLogicReportingApplication
             TreeViewItem empEmailAddrItem = new TreeViewItem();
             var tree = sender as TreeView;
 
-            for (int i = 0; i < zContractContactsObservable.Count; i++)
+            for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
             {
                 //AccountName = Level 0                       
-                if (zContractContactsObservable[i].Contains("{ Header = Item Level 0 }"))
+                if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 0 }"))
                 {                 
                     accountItem = new TreeViewItem();
                     // Removing everything after the account ID for the Tag
-                    accountItem.Tag = "{Parent} " + zContractContactsObservable[i].Remove(5);
+                    accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Remove(5);
                     accountItem.IsExpanded = false;
                     accountItem.FontWeight = FontWeights.Black;                    
-                    accountItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
+                    accountItem.Header = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
                     accountItem.Header = new CheckBox()
                     {
                         IsChecked = true,
@@ -109,18 +129,18 @@ namespace ProLogicReportingApplication
                         Focusable = true,                      
                         Name = "ParentChkBox",
                         // Removing the account ID and just keeping the Account Name                                                
-                        Content = zContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 0 }", "")
+                        Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 0 }", "")
                     };
                     tree.Items.Add(accountItem);
                 }
                 //ContactFullName = Level 1
-                if (zContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
+                if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
                 {                    
                     empItem = new TreeViewItem();
                     // Removing everything after the account ID for the Tag
-                    empItem.Tag = "{Child} " + zContractContactsObservable[i].Remove(5);
+                    empItem.Tag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5);
                     empItem.FontWeight = FontWeights.Black;
-                    empItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
+                    empItem.Header = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
                     empItem.Header = new CheckBox()
                     {
                         IsChecked = true,
@@ -128,56 +148,28 @@ namespace ProLogicReportingApplication
                         Focusable = true,
                         Name = "ChildChkBox",
                         // Removing the account ID and just keeping the Contact Full Name
-                        Content = zContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 1 }", "")
+                        Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 1 }", "")
                     };
                     accountItem.Items.Add(empItem);
                 }
                 //Contact Email Address = Level 2
-                if (zContractContactsObservable[i].Contains("{ Header = Item Level 2 }"))
+                if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 2 }"))
                 {                    
                     empEmailAddrItem = new TreeViewItem();
-                    empEmailAddrItem.Tag = "{Email} " + zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrItem.Tag = "{Email} " + proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.FontWeight = FontWeights.Black;
-                    empEmailAddrItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrItem.Header = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
                         IsChecked = true,
                         IsEnabled = false,
-                        Content = zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
+                        Content = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
                     };
                     empItem.Items.Add(empEmailAddrItem);
                 }
             }
         }
-        #endregion       
-
-        #region Mouse Click Event Handlers 
-        //DM - these are not being used anymore                   
-        //private void trvMouse_SingleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
-        //{              
-        //    e.Handled = true;
-        //    //Console.WriteLine("you clicked once");
-        //    //Console.WriteLine("trvMouse_SingleClick =>  OriginalSource -> " + e.OriginalSource);
-        //    //Console.WriteLine("trvMouse_SingleClick => RoutedEvent -> " + e.RoutedEvent);
-        //    //Console.WriteLine("trvMouse_SingleClick => Source -> " + e.Source);
-        //    return;
-        //}
-
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="sender"></param>
-        ///// <param name="e"></param>
-        //private void trvMouse_DoubleClick(object sender, RoutedEventArgs e) //RoutedEventArgs
-        //{
-        //    e.Handled = true;
-        //    Console.WriteLine("you clicked twice");
-        //    Console.WriteLine("trvMouse_DoubleClick => OriginalSource -> " + e.OriginalSource);
-        //    Console.WriteLine("trvMouse_DoubleClick => RoutedEvent -> " + e.RoutedEvent);
-        //    Console.WriteLine("trvMouse_DoubleClick => Source -> " + e.Source);
-        //    return;
-        //}
-        #endregion
+        #endregion        
 
         #region Preview Mouse Click Events
         /// <summary>
@@ -215,6 +207,7 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
+        #region Mouse Click Timer
         /// <summary>
         /// 
         /// </summary>
@@ -228,17 +221,9 @@ namespace ProLogicReportingApplication
             Console.WriteLine("Timer Stop -> " + userClicks);        
             //Console.WriteLine("timer stopped - Call Method");
         }
+        #endregion
 
-        /// <summary>
-        /// This will handle Selected Item Changes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            Console.WriteLine("TreeView Collapsed");
-        }        
-
+        #region Parent/Child Node Check
         /// <summary>
         ///  Handling parent and child clicks here
         ///  this is the primary UI function for checkbox manipulation
@@ -307,16 +292,7 @@ namespace ProLogicReportingApplication
             }            
             return item as TreeViewItem;            
         }
-
-
-        /// <summary>
-        /// Bid Email Send
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btn_SendBid_Click(object sender, RoutedEventArgs e)
-        {
-            // Add smtp email stuff here
-        }
+        #endregion
+        
     }
 }
