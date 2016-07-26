@@ -39,18 +39,15 @@ namespace ProLogicReportingApplication
         private List<string> proLogic_ContractContacts = new List<string>();        
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private Timer _mouseClickTimer = null;
-        private bool clickHandled = false;       
         private int userClicks;
+        private static string contractId;
 
         public MainWindow()
         {
             InitializeComponent();
-            //string[] args = Environment.GetCommandLineArgs();
-            //MessageBox.Show(args[1]); pass args[1] to LoadContacts when live
             // Call to Nucleus to get the data to populate the tree view
-            LoadContacts("00002");
-            //this.ContactsGrid.ItemsSource = ProLogic_zContractContacts;
-            //ContactsGrid.ItemsSource = ProLogic_zContractContacts.ToList();
+            contractId = "00002";
+            LoadContacts(contractId);            
         }
 
         /// <summary>
@@ -67,7 +64,7 @@ namespace ProLogicReportingApplication
             proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview           
-            proLogic_ContractContactsObservable = new ObservableCollection<String>(proLogic_ContractContacts);
+            proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
 
             return null;
         }
@@ -126,7 +123,7 @@ namespace ProLogicReportingApplication
                     {
                         IsChecked = true,
                         IsEnabled = true,
-                        Focusable = true,                      
+                        Focusable = true,           
                         Name = "ParentChkBox",
                         // Removing the account ID and just keeping the Account Name                                                
                         Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 0 }", "")
@@ -171,9 +168,10 @@ namespace ProLogicReportingApplication
         }
         #endregion        
 
-        #region Preview Mouse Click Events
+        #region Preview Mouse Click Event
         /// <summary>
-        /// 
+        /// Get the PreviewLeftMouseButtonDown Event
+        /// compares clicks against the users PC double click time
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -182,7 +180,7 @@ namespace ProLogicReportingApplication
         private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
         {                     
             if (e.ChangedButton == MouseButton.Left)
-            {
+            {                
                 userClicks++;
                 _mouseClickTimer = new Timer(GetDoubleClickTime());
                 _mouseClickTimer.AutoReset = false;
@@ -193,10 +191,10 @@ namespace ProLogicReportingApplication
                     _mouseClickTimer.Start();
                     if(userClicks == 1)
                     {
-                        NodeCheck(e.OriginalSource as DependencyObject, userClicks);
+                        NodeCheck(e.OriginalSource as DependencyObject);
                         return;
                     }
-                    if(userClicks >= 2)
+                    else
                     {
                         Console.WriteLine("2 clicks just once");
                         e.Handled = true;
@@ -209,7 +207,7 @@ namespace ProLogicReportingApplication
 
         #region Mouse Click Timer
         /// <summary>
-        /// 
+        /// Gets called when click timer expires
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -223,6 +221,12 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
+        private void CoalesceTreeView(TreeViewItem node, Boolean isChecked)
+        {
+            //Console.WriteLine("CoalesceTreeView " + node.);
+            //Console.WriteLine("CoalesceTreeView " + node.ItemContainerGenerator.Items.ToString());
+        }
+
         #region Parent/Child Node Check
         /// <summary>
         ///  Handling parent and child clicks here
@@ -230,69 +234,67 @@ namespace ProLogicReportingApplication
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
-        private static TreeViewItem NodeCheck(DependencyObject source, int numClicks)
+        private TreeViewItem NodeCheck(DependencyObject source)
         {
             while (source != null && !(source is TreeViewItem))
                 source = System.Windows.Media.VisualTreeHelper.GetParent(source);
             TreeViewItem item = source as TreeViewItem;
+            Nucleus.Agent _agent = new Nucleus.Agent();
 
-            if (numClicks == 1)
+            try
             {
-                try
+                if (item != null)
                 {
-                    if (item != null)
+                    if (item.Tag.ToString().Contains("{Parent}"))
                     {
-                        for (int i = 0; i < item.ItemContainerGenerator.Items.Count; i++)
+                        item.Focusable = true;
+                        item.IsSelected = true;
+                        ContentPresenter parentTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
+                        CheckBox parentTreeItemChkBox = item.Header as CheckBox;
+                        if (parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
                         {
-                            Console.WriteLine("Item Generator -> " + item.ItemContainerGenerator.Items[i].ToString());
-                        }
-                        Console.WriteLine("Item Name -> " + item);
-                        Console.WriteLine("Item Parent -> " + item.Parent);
-                        Console.WriteLine("Item Header -> " + item.Header);
-                        Console.WriteLine("Item Tag -> " + item.Tag);
-
-                        if (item.Tag.ToString().Contains("{Parent}"))
-                        {
-                            Console.WriteLine("Parent");
-                            item.Focusable = true;
-                            item.IsSelected = true;
-                            ContentPresenter parentTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
-                            CheckBox parentTreeItemChkBox = item.Header as CheckBox;
-                            if (parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
+                            if (parentTreeItemChkBox.IsChecked == true)
                             {
-                                if (parentTreeItemChkBox.IsChecked == true)
-                                {
-                                    Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
-
-                                }
-                                else if (parentTreeItemChkBox.IsChecked == false)
-                                {
-                                    Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);                                    
-                                }
+                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
+                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                            }
+                            else if (parentTreeItemChkBox.IsChecked == false)
+                            {
+                                Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);                                
+                                CoalesceTreeView(item, true);
+                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                             }
                         }
-                        if (item.Tag.ToString().Contains("{Child}"))
+                    }
+                    if (item.Tag.ToString().Contains("{Child}"))
+                    {
+                        item.Focusable = true;
+                        item.IsSelected = true;
+                        ContentPresenter childTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
+                        CheckBox childTreeItemChkBox = item.Header as CheckBox;
+                        if (childTreeItemContentPresenter != null && childTreeItemChkBox.Name.ToString() == "ChildChkBox")
                         {
-                            Console.WriteLine("Child");
-                            item.Focusable = true;
-                            item.IsSelected = true;
-                            ContentPresenter childTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
-                            CheckBox childTreeItemChkBox = item.Header as CheckBox;
-                            if (childTreeItemContentPresenter != null && childTreeItemChkBox.Name.ToString() == "ChildChkBox")
+                            if (childTreeItemChkBox.IsChecked == true)
                             {
-
+                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);                                
+                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                            }
+                            else if (childTreeItemChkBox.IsChecked == false)
+                            {
+                                Console.WriteLine("Child Check Box is Checked -> " + childTreeItemChkBox);
+                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                         }
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
-            }            
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+                                   
             return item as TreeViewItem;            
         }
-        #endregion
-        
+        #endregion        
     }
 }
