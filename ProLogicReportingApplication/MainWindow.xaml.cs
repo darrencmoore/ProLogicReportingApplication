@@ -36,8 +36,8 @@ namespace ProLogicReportingApplication
     /// </summary>
     public partial class MainWindow : Window 
     {        
-        private List<String> proLogic_ContractContacts = new List<String>();        
-        private ObservableCollection<String> proLogic_ContractContactsObservable = new ObservableCollection<String>();
+        private List<string> proLogic_ContractContacts = new List<string>();        
+        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private Timer _mouseClickTimer = null;
         private bool clickHandled = false;       
         private int userClicks;
