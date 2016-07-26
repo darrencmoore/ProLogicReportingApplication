@@ -55,7 +55,7 @@ namespace ProLogicReportingApplication
 
         /// <summary>
         /// Gets called on initialization takes the Contract passed from SYSPRO
-        /// This method also calls on Nucleus.dll for the SELECT statement 
+        /// This method also calls on Nucleus.dll for the GetContacts() 
         /// </summary>
         /// <param name="contractId"></param>
         /// <returns></returns>
@@ -64,7 +64,7 @@ namespace ProLogicReportingApplication
             Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.GetContacts(contractId);
             // Adds the list from Nucleus.Agent                      
-            proLogic_ContractContacts.AddRange(_agent.getAgent_ContactsResponse);
+            proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview           
             proLogic_ContractContactsObservable = new ObservableCollection<String>(proLogic_ContractContacts);
