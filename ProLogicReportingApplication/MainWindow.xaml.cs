@@ -48,7 +48,7 @@ namespace ProLogicReportingApplication
             //string[] args = Environment.GetCommandLineArgs();
             //MessageBox.Show(args[1]);
             // Call to Nucleus to get the data to populate the tree view
-            LoadAccount_AccountContacts("00001");
+            LoadAccount_AccountContacts("00002");
             //this.ContactsGrid.ItemsSource = ProLogic_zContractContacts;
             //ContactsGrid.ItemsSource = ProLogic_zContractContacts.ToList();
         }        
@@ -100,6 +100,7 @@ namespace ProLogicReportingApplication
                     // Removing everything after the account ID for the Tag
                     accountItem.Tag = "{Parent} " + zContractContactsObservable[i].Remove(5);
                     accountItem.IsExpanded = false;
+                    accountItem.FontWeight = FontWeights.Black;                    
                     accountItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
                     accountItem.Header = new CheckBox()
                     {
@@ -118,6 +119,7 @@ namespace ProLogicReportingApplication
                     empItem = new TreeViewItem();
                     // Removing everything after the account ID for the Tag
                     empItem.Tag = "{Child} " + zContractContactsObservable[i].Remove(5);
+                    empItem.FontWeight = FontWeights.Black;
                     empItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
                     empItem.Header = new CheckBox()
                     {
@@ -135,6 +137,7 @@ namespace ProLogicReportingApplication
                 {                    
                     empEmailAddrItem = new TreeViewItem();
                     empEmailAddrItem.Tag = "{Email} " + zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrItem.FontWeight = FontWeights.Black;
                     empEmailAddrItem.Header = zContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.Header = new CheckBox()
                     {
