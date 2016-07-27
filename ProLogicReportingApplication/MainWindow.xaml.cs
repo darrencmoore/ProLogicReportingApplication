@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Drawing;
+//using System.Drawing;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -22,7 +22,10 @@ using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using System.Net;
 using System.Net.Mail;
-
+using CrystalDecisions.Shared;
+using CrystalDecisions.CrystalReports.Engine;
+using System.Reflection;
+using SAPBusinessObjects.WPF.Viewer;
 
 /// <summary>
 /// Created By Darren Moore
@@ -249,20 +252,23 @@ namespace ProLogicReportingApplication
                     {
                         item.Focusable = true;
                         item.IsSelected = true;
+                        ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                         ContentPresenter parentTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
                         CheckBox parentTreeItemChkBox = item.Header as CheckBox;
                         if (parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
                         {
                             if (parentTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
-                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);                                
+                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
                             }
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);                                
-                                CoalesceTreeView(item, true);
-                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                //CoalesceTreeView(item, true);
+                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                             }
                         }
                     }
@@ -270,19 +276,22 @@ namespace ProLogicReportingApplication
                     {
                         item.Focusable = true;
                         item.IsSelected = true;
+                        ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                         ContentPresenter childTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
                         CheckBox childTreeItemChkBox = item.Header as CheckBox;
                         if (childTreeItemContentPresenter != null && childTreeItemChkBox.Name.ToString() == "ChildChkBox")
                         {
                             if (childTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);                                
-                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);                                                                
+                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                             else if (childTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Child Check Box is Checked -> " + childTreeItemChkBox);
-                                _agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                         }
                     }
@@ -295,6 +304,37 @@ namespace ProLogicReportingApplication
                                    
             return item as TreeViewItem;            
         }
-        #endregion        
+        #endregion
+
+        #region Report Preview
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="contractId"></param>
+        /// <param name="accountId"></param>
+        private void ContractBidReportPreview(string contractId, string accountId)
+        {
+            try
+            {
+                new Task(() =>
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        ReportDocument contractBidReportPreview = new ReportDocument();
+                        var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
+                        contractBidReportPreview.Load(path);
+                        contractBidReportPreview.SetParameterValue("@Contract", contractId);//.ParameterFields.Add(ContractId);
+                        contractBidReportPreview.SetParameterValue("@Account", accountId);//ParameterFields.Add(AccountId);                        
+                        bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
+                    }), null);
+                }).Start();                             
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }            
+        }
+        #endregion
+
     }
 }
