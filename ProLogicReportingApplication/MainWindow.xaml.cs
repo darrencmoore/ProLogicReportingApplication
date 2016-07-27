@@ -40,7 +40,7 @@ namespace ProLogicReportingApplication
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private Timer _mouseClickTimer = null;
         private int userClicks;
-        private static string contractId;
+        private static string contractId;        
 
         public MainWindow()
         {
