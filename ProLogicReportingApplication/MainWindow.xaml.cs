@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 //using System.Drawing;
+using System.Data;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -194,7 +195,14 @@ namespace ProLogicReportingApplication
                     _mouseClickTimer.Start();
                     if(userClicks == 1)
                     {
-                        NodeCheck(e.OriginalSource as DependencyObject);
+                        
+                        new Task(() =>
+                        {
+                            Dispatcher.BeginInvoke(new Action(() =>
+                            {
+                                NodeCheck(e.OriginalSource as DependencyObject);
+                            }), null);
+                        }).Start();
                         return;
                     }
                     else
@@ -242,7 +250,6 @@ namespace ProLogicReportingApplication
             while (source != null && !(source is TreeViewItem))
                 source = System.Windows.Media.VisualTreeHelper.GetParent(source);
             TreeViewItem item = source as TreeViewItem;
-            Nucleus.Agent _agent = new Nucleus.Agent();
 
             try
             {
@@ -252,7 +259,7 @@ namespace ProLogicReportingApplication
                     {
                         item.Focusable = true;
                         item.IsSelected = true;
-                        ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                        //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                         ContentPresenter parentTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
                         CheckBox parentTreeItemChkBox = item.Header as CheckBox;
                         if (parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
@@ -261,7 +268,7 @@ namespace ProLogicReportingApplication
                             {
                                 Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);                                
                                 //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
-                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
                             }
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
@@ -283,7 +290,7 @@ namespace ProLogicReportingApplication
                         {
                             if (childTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);                                                                
+                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);                                                                                                
                                 //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                                 //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
@@ -301,8 +308,8 @@ namespace ProLogicReportingApplication
             {
                 Console.WriteLine(e.ToString());
             }
-                                   
-            return item as TreeViewItem;            
+
+            return item;            
         }
         #endregion
 
@@ -316,23 +323,30 @@ namespace ProLogicReportingApplication
         {
             try
             {
-                new Task(() =>
-                {
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        ReportDocument contractBidReportPreview = new ReportDocument();
-                        var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
-                        contractBidReportPreview.Load(path);
-                        contractBidReportPreview.SetParameterValue("@Contract", contractId);//.ParameterFields.Add(ContractId);
-                        contractBidReportPreview.SetParameterValue("@Account", accountId);//ParameterFields.Add(AccountId);                        
-                        bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
-                    }), null);
-                }).Start();                             
+                Nucleus.Agent _agent = new Nucleus.Agent();
+                DataTable table = new DataTable();
+                table = _agent.ReportPreview(contractId, accountId);
+                ReportDocument contractBidReportPreview = new ReportDocument();
+                var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\CrystalReport1.rpt");
+                contractBidReportPreview.Load(path);
+                contractBidReportPreview.SetDataSource(table);
+                //contractBidReportPreview.SetParameterValue("@Contract", contractId);//.ParameterFields.Add(ContractId);
+                //contractBidReportPreview.SetParameterValue("@Account", accountId);//ParameterFields.Add(AccountId);
+                bidContractReportPreview.Owner = Window.GetWindow(this);
+                bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;               
             }
-            catch (Exception e)
+            catch (LogOnException e)
             {
                 Console.WriteLine(e.ToString());
-            }            
+            }
+            catch (DataSourceException e)
+            {
+                Console.WriteLine(e.ToString());
+            } 
+            catch (EngineException engEx)
+            {
+                Console.WriteLine(engEx.ToString());
+            }           
         }
         #endregion
 
