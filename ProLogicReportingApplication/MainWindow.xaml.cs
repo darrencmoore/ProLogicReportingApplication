@@ -176,6 +176,7 @@ namespace ProLogicReportingApplication
         /// <summary>
         /// Get the PreviewLeftMouseButtonDown Event
         /// compares clicks against the users PC double click time
+        /// Then calls the NodeCheck method 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -200,7 +201,6 @@ namespace ProLogicReportingApplication
                     }
                     else
                     {
-                        Console.WriteLine("2 clicks just once");
                         e.Handled = true;
                         return;
                     }   
