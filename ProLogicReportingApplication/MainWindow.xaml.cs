@@ -195,14 +195,7 @@ namespace ProLogicReportingApplication
                     _mouseClickTimer.Start();
                     if(userClicks == 1)
                     {
-                        
-                        new Task(() =>
-                        {
-                            Dispatcher.BeginInvoke(new Action(() =>
-                            {
-                                NodeCheck(e.OriginalSource as DependencyObject);
-                            }), null);
-                        }).Start();
+                        NodeCheck(e.OriginalSource as DependencyObject);                        
                         return;
                     }
                     else
