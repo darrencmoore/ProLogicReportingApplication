@@ -196,7 +196,7 @@ namespace ProLogicReportingApplication
                     _mouseClickTimer.Start();
                     if(userClicks == 1)
                     { 
-                        NodeCheck(e.OriginalSource as DependencyObject);                        
+                        NodeCheck(e.OriginalSource as DependencyObject);
                         return;
                     }
                     else
@@ -259,11 +259,13 @@ namespace ProLogicReportingApplication
                             if (parentTreeItemChkBox.IsChecked == true)
                             {
                                 Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
+                                SetChildrenChecks(item, false);                                    
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
                             }
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);
+                                SetChildrenChecks(item, true);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                             }
                         }
@@ -279,11 +281,15 @@ namespace ProLogicReportingApplication
                             if (childTreeItemChkBox.IsChecked == true)
                             {
                                 Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);
+                                Console.WriteLine("Parent -> " + item.Parent.ToString());
+                                SetParentChecks((TreeViewItem)item.Parent, true);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                             else if (childTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Child Check Box is Checked -> " + childTreeItemChkBox);
+                                Console.WriteLine("Parent -> " + item.Parent.ToString());
+                                SetParentChecks((TreeViewItem)item.Parent, false);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                         }
@@ -298,6 +304,47 @@ namespace ProLogicReportingApplication
             return item;            
         }
         #endregion
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="checkedState"></param>
+        private void SetChildrenChecks(TreeViewItem item, bool checkedState)
+        {
+            foreach(TreeViewItem tv in item.Items)
+            {
+                if(checkedState == true)
+                {
+                    CheckBox parentHasChildItem = tv.Header as CheckBox;
+                    parentHasChildItem.IsChecked = true;
+                }
+                else
+                {
+                    CheckBox parentHasChildItem = tv.Header as CheckBox;
+                    parentHasChildItem.IsChecked = false;
+                }               
+            }
+        }
+
+        private void SetParentChecks(TreeViewItem item, bool checkedState)
+        {
+
+            if (checkedState == true)
+            {
+                CheckBox childsParentItem = item.Header as CheckBox;
+                childsParentItem.IsChecked = true;
+                //childsParentItem.IsEnabled = false;
+            }
+            else
+            {
+                CheckBox childsParentItem = item.Header as CheckBox;
+                childsParentItem.IsChecked = false;
+                childsParentItem.IsEnabled = true;
+            }
+
+        }
+
 
         #region Report Preview
         /// <summary>
@@ -317,6 +364,7 @@ namespace ProLogicReportingApplication
                 contractBidReportPreview.Load(path);
                 contractBidReportPreview.SetDataSource(reportPreviewtable);
                 bidContractReportPreview.Owner = Window.GetWindow(this);
+                contractBidReportPreview.Refresh();
                 bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;               
             }
             catch (LogOnException e)
