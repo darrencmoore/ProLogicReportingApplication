@@ -324,14 +324,12 @@ namespace ProLogicReportingApplication
             try
             {
                 Nucleus.Agent _agent = new Nucleus.Agent();
-                DataTable table = new DataTable();
-                table = _agent.ReportPreview(contractId, accountId);
+                DataTable reportPreviewtable = new DataTable();
+                reportPreviewtable = _agent.ReportPreview(contractId, accountId);
                 ReportDocument contractBidReportPreview = new ReportDocument();
                 var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
                 contractBidReportPreview.Load(path);
-                contractBidReportPreview.SetDataSource(table);
-                //contractBidReportPreview.SetParameterValue("@Contract", contractId);//.ParameterFields.Add(ContractId);
-                //contractBidReportPreview.SetParameterValue("@Account", accountId);//ParameterFields.Add(AccountId);
+                contractBidReportPreview.SetDataSource(reportPreviewtable);
                 bidContractReportPreview.Owner = Window.GetWindow(this);
                 bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;               
             }
