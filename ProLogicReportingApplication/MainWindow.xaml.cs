@@ -327,7 +327,7 @@ namespace ProLogicReportingApplication
                 DataTable table = new DataTable();
                 table = _agent.ReportPreview(contractId, accountId);
                 ReportDocument contractBidReportPreview = new ReportDocument();
-                var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\CrystalReport1.rpt");
+                var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
                 contractBidReportPreview.Load(path);
                 contractBidReportPreview.SetDataSource(table);
                 //contractBidReportPreview.SetParameterValue("@Contract", contractId);//.ParameterFields.Add(ContractId);
