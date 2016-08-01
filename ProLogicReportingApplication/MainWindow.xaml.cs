@@ -195,7 +195,7 @@ namespace ProLogicReportingApplication
                 {                    
                     _mouseClickTimer.Start();
                     if(userClicks == 1)
-                    {
+                    { 
                         NodeCheck(e.OriginalSource as DependencyObject);                        
                         return;
                     }
@@ -252,23 +252,19 @@ namespace ProLogicReportingApplication
                     {
                         item.Focusable = true;
                         item.IsSelected = true;
-                        //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                         ContentPresenter parentTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
                         CheckBox parentTreeItemChkBox = item.Header as CheckBox;
                         if (parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
                         {
                             if (parentTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);                                
-                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
                             }
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
-                                Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);                                
-                                //CoalesceTreeView(item, true);
-                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
-                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                             }
                         }
                     }
@@ -276,22 +272,19 @@ namespace ProLogicReportingApplication
                     {
                         item.Focusable = true;
                         item.IsSelected = true;
-                        ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                         ContentPresenter childTreeItemContentPresenter = item.Template.FindName("PART_Header", item) as ContentPresenter;
                         CheckBox childTreeItemChkBox = item.Header as CheckBox;
                         if (childTreeItemContentPresenter != null && childTreeItemChkBox.Name.ToString() == "ChildChkBox")
                         {
                             if (childTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);                                                                                                
-                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
-                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                             else if (childTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Child Check Box is Checked -> " + childTreeItemChkBox);
-                                //_agent.ReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
-                                //ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                         }
                     }
