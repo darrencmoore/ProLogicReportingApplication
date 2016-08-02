@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -45,7 +46,8 @@ namespace ProLogicReportingApplication
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private Timer _mouseClickTimer = null;
         private int userClicks;
-        private static string contractId;        
+        private static string contractId;
+        private static string ReportCacheDir = @"C:\AgentReportCache\";
 
         public MainWindow()
         {
@@ -55,14 +57,17 @@ namespace ProLogicReportingApplication
             LoadContacts(contractId);            
         }
 
+        #region Load Contacts
         /// <summary>
         /// Gets called on initialization takes the Contract passed from SYSPRO
         /// This method also calls on Nucleus.dll for the GetContacts() 
+        /// Then loops over the proLogic_ContractContactsObservable and adds contract and account as a keypair
         /// </summary>
         /// <param name="contractId"></param>
         /// <returns></returns>
         public string LoadContacts(string contractId)
-        {
+        {            
+            List<KeyValuePair<string, string>> ToBeCahcedReports = new List<KeyValuePair<string, string>>();
             Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.GetContacts(contractId);
             // Adds the list from Nucleus.Agent                      
@@ -70,9 +75,20 @@ namespace ProLogicReportingApplication
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview           
             proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
+            foreach(var item in proLogic_ContractContactsObservable)
+            {
+                if(item.Contains("{ Header = Item Level 0 }"))
+                {                    
+                    string accountId = item.Remove(4);
+                    KeyValuePair<string, string> myItem = new KeyValuePair<string, string>(contractId, accountId);
+                    ToBeCahcedReports.Add(myItem);
+                }
+            }
+            AgentReportCacheWorker(ToBeCahcedReports);            
 
             return null;
         }
+        #endregion
 
         /// <summary>
         /// This will handle Selected Item Changes
@@ -84,6 +100,7 @@ namespace ProLogicReportingApplication
             Console.WriteLine("TreeView Collapsed");
         }
 
+        #region Email Send
         /// <summary>
         /// Bid Email Send
         /// </summary>
@@ -93,6 +110,7 @@ namespace ProLogicReportingApplication
         {
             // Add smtp email stuff here
         }
+        #endregion
 
         #region TreeView Load 
         /// <summary>
@@ -110,7 +128,7 @@ namespace ProLogicReportingApplication
         {
             TreeViewItem accountItem = new TreeViewItem();
             TreeViewItem empItem = new TreeViewItem();           
-            TreeViewItem empEmailAddrItem = new TreeViewItem();
+            TreeViewItem empEmailAddrItem = new TreeViewItem();            
             var tree = sender as TreeView;
 
             for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
@@ -133,7 +151,7 @@ namespace ProLogicReportingApplication
                         // Removing the account ID and just keeping the Account Name                                                
                         Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 0 }", "")
                     };
-                    tree.Items.Add(accountItem);
+                    tree.Items.Add(accountItem);                 
                 }
                 //ContactFullName = Level 1
                 if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
@@ -168,8 +186,8 @@ namespace ProLogicReportingApplication
                         Content = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
                     };
                     empItem.Items.Add(empEmailAddrItem);
-                }
-            }
+                }                
+            }            
         }
         #endregion        
 
@@ -306,6 +324,7 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
+        #region Parent/Child Checkbox Manipulation
         /// <summary>
         /// 
         /// </summary>
@@ -328,6 +347,11 @@ namespace ProLogicReportingApplication
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="checkedState"></param>
         private void SetParentChecks(TreeViewItem item, bool checkedState)
         {
 
@@ -345,11 +369,63 @@ namespace ProLogicReportingApplication
             }
 
         }
+        #endregion
+
+        #region Agent Report Cache Background Worker
+        /// <summary>
+        /// Worker for Caching reports. Calls reportPreviewCacheWorker to cache genereated reports
+        /// </summary>
+        /// <param name="reportsReadyForCache"></param>
+        private void AgentReportCacheWorker(List<KeyValuePair<string, string>> reportsReadyForCache)
+        {
+            BackgroundWorker worker = new BackgroundWorker();
+            //worker.WorkerReportsProgress = true;
+            worker.DoWork += reportPreviewCacheWorker;
+            //worker.ProgressChanged += worker_ProgressChanged;
+            //worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            worker.RunWorkerAsync(reportsReadyForCache);
+        }
 
 
-        #region Report Preview
         /// <summary>
         /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void reportPreviewCacheWorker(object sender, DoWorkEventArgs e)
+        {
+            Nucleus.Agent _agent = new Nucleus.Agent();
+            List<KeyValuePair<string, string>> reportsReadyForCache = (List<KeyValuePair<string, string>>)e.Argument;
+            foreach(KeyValuePair<string, string> combo_contractaccount in reportsReadyForCache)
+            {
+                ContractBidReportCache(combo_contractaccount.Key, combo_contractaccount.Value);
+            }
+        }
+        #endregion
+
+        #region Application Report Cache
+        /// <summary>
+        /// Saves reports the get generated in background thread worker
+        /// </summary>
+        /// <param name="contractId"></param>
+        /// <param name="accountId"></param>
+        private void ContractBidReportCache(string contractId, string accountId)
+        {
+            Nucleus.Agent _agent = new Nucleus.Agent();
+            DataTable reportPreviewCacheTable = new DataTable();            
+            reportPreviewCacheTable = _agent.ReportPreview(contractId, accountId);
+            ReportDocument contractBidReportPreviewCache = new ReportDocument();
+            var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
+            contractBidReportPreviewCache.Load(path);
+            contractBidReportPreviewCache.SetDataSource(reportPreviewCacheTable);
+            contractBidReportPreviewCache.Refresh();            
+            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId + ".rpt" );            
+        }
+        #endregion
+
+        #region Application Report Preview
+        /// <summary>
+        /// Pulls the generated Report from C:\\AgentReportCache
         /// </summary>
         /// <param name="contractId"></param>
         /// <param name="accountId"></param>
@@ -357,19 +433,18 @@ namespace ProLogicReportingApplication
         {
             try
             {
-                Nucleus.Agent _agent = new Nucleus.Agent();
-                DataTable reportPreviewTable = new DataTable();
-                ObjectCache reportCache = MemoryCache.Default;
-                reportPreviewTable = _agent.ReportPreview(contractId, accountId);
-                ReportDocument contractBidReportPreview = new ReportDocument();
-                var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
-                contractBidReportPreview.Load(path);
-                contractBidReportPreview.SetDataSource(reportPreviewTable);
-                bidContractReportPreview.Owner = Window.GetWindow(this);
-                contractBidReportPreview.Refresh();                
-                string reportPreviewCache = reportCache["contractBidReportPreview"] as String;                
-                bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
-                _agent.ReportPreviewCache(reportPreviewCache, contractId, accountId);
+                var cachedReportFile = Directory.GetFiles(ReportCacheDir, contractId + accountId + ".rpt");
+                if(cachedReportFile != null)
+                {
+                    ReportDocument contractBidReportPreview = new ReportDocument();
+                    string path = (ReportCacheDir + contractId + accountId + ".rpt");
+                    contractBidReportPreview.Load(path);
+                    bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
+                }
+                else
+                {
+                    //generate report here
+                }                
             }
             catch (LogOnException e)
             {
@@ -385,6 +460,5 @@ namespace ProLogicReportingApplication
             }           
         }
         #endregion
-
     }
 }
