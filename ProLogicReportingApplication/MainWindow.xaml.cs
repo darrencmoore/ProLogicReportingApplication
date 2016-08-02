@@ -21,6 +21,7 @@ using Nucleus;
 using System.Timers;
 using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
+using System.Runtime.Caching;
 using System.Net;
 using System.Net.Mail;
 using CrystalDecisions.Shared;
@@ -357,15 +358,18 @@ namespace ProLogicReportingApplication
             try
             {
                 Nucleus.Agent _agent = new Nucleus.Agent();
-                DataTable reportPreviewtable = new DataTable();
-                reportPreviewtable = _agent.ReportPreview(contractId, accountId);
+                DataTable reportPreviewTable = new DataTable();
+                ObjectCache reportCache = MemoryCache.Default;
+                reportPreviewTable = _agent.ReportPreview(contractId, accountId);
                 ReportDocument contractBidReportPreview = new ReportDocument();
                 var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
                 contractBidReportPreview.Load(path);
-                contractBidReportPreview.SetDataSource(reportPreviewtable);
+                contractBidReportPreview.SetDataSource(reportPreviewTable);
                 bidContractReportPreview.Owner = Window.GetWindow(this);
-                contractBidReportPreview.Refresh();
-                bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;               
+                contractBidReportPreview.Refresh();                
+                string reportPreviewCache = reportCache["contractBidReportPreview"] as String;                
+                bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
+                _agent.ReportPreviewCache(reportPreviewCache, contractId, accountId);
             }
             catch (LogOnException e)
             {
