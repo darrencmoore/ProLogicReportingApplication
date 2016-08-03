@@ -235,60 +235,7 @@ namespace ProLogicReportingApplication
             NodeCheck(sender as DependencyObject);
         }
         #endregion
-
-        //#region Preview Mouse Click Event
-        ///// <summary>
-        ///// Get the PreviewLeftMouseButtonDown Event
-        ///// compares clicks against the users PC double click time
-        ///// Then calls the NodeCheck method 
-        ///// </summary>
-        ///// <param name="sender"></param>
-        ///// <param name="e"></param>
-        //[DllImport("user32.dll")]
-        //static extern uint GetDoubleClickTime();
-        //private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
-        //{                     
-        //    if (e.ChangedButton == MouseButton.Left)
-        //    {                
-        //        userClicks++;
-        //        _mouseClickTimer = new Timer(GetDoubleClickTime());
-        //        _mouseClickTimer.AutoReset = false;
-        //        _mouseClickTimer.Elapsed += new ElapsedEventHandler(MouseClickTimer);                    
-
-        //        if (!_mouseClickTimer.Enabled)
-        //        {                    
-        //            _mouseClickTimer.Start();
-        //            if(userClicks == 1)
-        //            { 
-        //                NodeCheck(e.OriginalSource as DependencyObject);
-        //                return;
-        //            }
-        //            else
-        //            {
-        //                e.Handled = true;
-        //                return;
-        //            }   
-        //        }                            
-        //    }           
-        //}
-        //#endregion
-
-        //#region Mouse Click Timer
-        ///// <summary>
-        ///// Gets called when click timer expires
-        ///// </summary>
-        ///// <param name="sender"></param>
-        ///// <param name="e"></param>
-        //private void MouseClickTimer(object sender, ElapsedEventArgs e)
-        //{  
-        //    _mouseClickTimer.Stop();
-        //    Console.WriteLine("Mouse Timer Clicks -> " + userClicks);
-        //    userClicks = 0;
-        //    Console.WriteLine("Timer Stop -> " + userClicks);        
-        //    //Console.WriteLine("timer stopped - Call Method");
-        //}
-        //#endregion
-
+        
         private void CoalesceTreeView(TreeViewItem node, Boolean isChecked)
         {
             //Console.WriteLine("CoalesceTreeView " + node.);
