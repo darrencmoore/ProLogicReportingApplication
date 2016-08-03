@@ -171,7 +171,8 @@ namespace ProLogicReportingApplication
             TreeViewItem accountItem = new TreeViewItem();
             TreeViewItem empItem = new TreeViewItem();           
             TreeViewItem empEmailAddrItem = new TreeViewItem();            
-            var tree = sender as TreeView;
+            TreeView tree = sender as TreeView;
+            
 
             for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
             {
@@ -182,18 +183,17 @@ namespace ProLogicReportingApplication
                     // Removing everything after the account ID for the Tag
                     accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Remove(5);
                     accountItem.IsExpanded = false;
-                    accountItem.FontWeight = FontWeights.Black;                    
-                    accountItem.Header = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 0 }", "");
-                    accountItem.Header = new CheckBox()
-                    {
-                        IsChecked = true,
-                        IsEnabled = true,
-                        Focusable = true,           
-                        Name = "ParentChkBox",
-                        // Removing the account ID and just keeping the Account Name                                                
-                        Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 0 }", "")
-                    };
-                    tree.Items.Add(accountItem);                 
+                    accountItem.FontWeight = FontWeights.Black;
+                    CheckBox accountCheckBox = new CheckBox();
+                    accountCheckBox.IsChecked = true;
+                    accountCheckBox.IsEnabled = true;
+                    accountCheckBox.Focusable = true;
+                    accountCheckBox.IsThreeState = true;
+                    accountCheckBox.Name = "ParentChkBox";
+                    accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
+                    accountCheckBox.Click += mouseClickHandler;
+                    accountItem.Header = accountCheckBox;
+                    tree.Items.Add(accountItem);                                     
                 }
                 //ContactFullName = Level 1
                 if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
@@ -202,16 +202,14 @@ namespace ProLogicReportingApplication
                     // Removing everything after the account ID for the Tag
                     empItem.Tag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5);
                     empItem.FontWeight = FontWeights.Black;
-                    empItem.Header = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 1 }", "");
-                    empItem.Header = new CheckBox()
-                    {
-                        IsChecked = true,
-                        IsEnabled = true,
-                        Focusable = true,
-                        Name = "ChildChkBox",
-                        // Removing the account ID and just keeping the Contact Full Name
-                        Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 1 }", "")
-                    };
+                    CheckBox empItemCheckBox = new CheckBox();
+                    empItemCheckBox.IsChecked = true;
+                    empItemCheckBox.IsEnabled = true;
+                    empItemCheckBox.Focusable = true;
+                    empItemCheckBox.Name = "ChildChkBox";
+                    empItemCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 1 }", "");
+                    empItemCheckBox.Click += mouseClickHandler;
+                    empItem.Header = empItemCheckBox;                   
                     accountItem.Items.Add(empItem);
                 }
                 //Contact Email Address = Level 2
@@ -220,71 +218,76 @@ namespace ProLogicReportingApplication
                     empEmailAddrItem = new TreeViewItem();
                     empEmailAddrItem.Tag = "{Email} " + proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrItem.FontWeight = FontWeights.Black;
-                    empEmailAddrItem.Header = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
-                    empEmailAddrItem.Header = new CheckBox()
-                    {
-                        IsChecked = true,
-                        IsEnabled = false,
-                        Content = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "")
-                    };
-                    empItem.Items.Add(empEmailAddrItem);
+                    CheckBox empEmailAddrCheckBox = new CheckBox();
+                    empEmailAddrCheckBox.IsChecked = true;
+                    empEmailAddrCheckBox.IsEnabled = false;
+                    empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrCheckBox.Click += mouseClickHandler;
+                    empEmailAddrItem.Header = empEmailAddrCheckBox;
+                    empItem.Items.Add(empEmailAddrItem);                    
                 }                
-            }            
+            }                    
         }
-        #endregion        
-
-        #region Preview Mouse Click Event
-        /// <summary>
-        /// Get the PreviewLeftMouseButtonDown Event
-        /// compares clicks against the users PC double click time
-        /// Then calls the NodeCheck method 
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        [DllImport("user32.dll")]
-        static extern uint GetDoubleClickTime();
-        private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
-        {                     
-            if (e.ChangedButton == MouseButton.Left)
-            {                
-                userClicks++;
-                _mouseClickTimer = new Timer(GetDoubleClickTime());
-                _mouseClickTimer.AutoReset = false;
-                _mouseClickTimer.Elapsed += new ElapsedEventHandler(MouseClickTimer);                    
-
-                if (!_mouseClickTimer.Enabled)
-                {                    
-                    _mouseClickTimer.Start();
-                    if(userClicks == 1)
-                    { 
-                        NodeCheck(e.OriginalSource as DependencyObject);
-                        return;
-                    }
-                    else
-                    {
-                        e.Handled = true;
-                        return;
-                    }   
-                }                            
-            }           
+        #endregion
+        #region Mouse Click Handler
+        private void mouseClickHandler(object sender, EventArgs e)
+        {
+            NodeCheck(sender as DependencyObject);
         }
         #endregion
 
-        #region Mouse Click Timer
-        /// <summary>
-        /// Gets called when click timer expires
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MouseClickTimer(object sender, ElapsedEventArgs e)
-        {  
-            _mouseClickTimer.Stop();
-            Console.WriteLine("Mouse Timer Clicks -> " + userClicks);
-            userClicks = 0;
-            Console.WriteLine("Timer Stop -> " + userClicks);        
-            //Console.WriteLine("timer stopped - Call Method");
-        }
-        #endregion
+        //#region Preview Mouse Click Event
+        ///// <summary>
+        ///// Get the PreviewLeftMouseButtonDown Event
+        ///// compares clicks against the users PC double click time
+        ///// Then calls the NodeCheck method 
+        ///// </summary>
+        ///// <param name="sender"></param>
+        ///// <param name="e"></param>
+        //[DllImport("user32.dll")]
+        //static extern uint GetDoubleClickTime();
+        //private void previewMouse_SingleClick(object sender, MouseButtonEventArgs e)
+        //{                     
+        //    if (e.ChangedButton == MouseButton.Left)
+        //    {                
+        //        userClicks++;
+        //        _mouseClickTimer = new Timer(GetDoubleClickTime());
+        //        _mouseClickTimer.AutoReset = false;
+        //        _mouseClickTimer.Elapsed += new ElapsedEventHandler(MouseClickTimer);                    
+
+        //        if (!_mouseClickTimer.Enabled)
+        //        {                    
+        //            _mouseClickTimer.Start();
+        //            if(userClicks == 1)
+        //            { 
+        //                NodeCheck(e.OriginalSource as DependencyObject);
+        //                return;
+        //            }
+        //            else
+        //            {
+        //                e.Handled = true;
+        //                return;
+        //            }   
+        //        }                            
+        //    }           
+        //}
+        //#endregion
+
+        //#region Mouse Click Timer
+        ///// <summary>
+        ///// Gets called when click timer expires
+        ///// </summary>
+        ///// <param name="sender"></param>
+        ///// <param name="e"></param>
+        //private void MouseClickTimer(object sender, ElapsedEventArgs e)
+        //{  
+        //    _mouseClickTimer.Stop();
+        //    Console.WriteLine("Mouse Timer Clicks -> " + userClicks);
+        //    userClicks = 0;
+        //    Console.WriteLine("Timer Stop -> " + userClicks);        
+        //    //Console.WriteLine("timer stopped - Call Method");
+        //}
+        //#endregion
 
         private void CoalesceTreeView(TreeViewItem node, Boolean isChecked)
         {
@@ -319,14 +322,14 @@ namespace ProLogicReportingApplication
                         {
                             if (parentTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Parent Check Box Unchecked  -> " + parentTreeItemChkBox);
-                                SetChildrenChecks(item, false);                                    
+                                Console.WriteLine("Parent Check Box Checked  -> " + parentTreeItemChkBox);
+                                SetChildrenChecks(item, true);                                    
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
                             }
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
-                                Console.WriteLine("Parent Check Box is Checked -> " + parentTreeItemChkBox);
-                                SetChildrenChecks(item, true);
+                                Console.WriteLine("Parent Check Box is Unchecked -> " + parentTreeItemChkBox);
+                                //SetChildrenChecks(item, true);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
                             }
                         }
@@ -341,14 +344,14 @@ namespace ProLogicReportingApplication
                         {
                             if (childTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Child Check Box Unchecked  -> " + childTreeItemChkBox);
+                                Console.WriteLine("Child Check Box Checked  -> " + childTreeItemChkBox);
                                 Console.WriteLine("Parent -> " + item.Parent.ToString());
                                 SetParentChecks((TreeViewItem)item.Parent, true);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                             else if (childTreeItemChkBox.IsChecked == false)
                             {
-                                Console.WriteLine("Child Check Box is Checked -> " + childTreeItemChkBox);
+                                Console.WriteLine("Child Check Box is Unchecked -> " + childTreeItemChkBox);
                                 Console.WriteLine("Parent -> " + item.Parent.ToString());
                                 SetParentChecks((TreeViewItem)item.Parent, false);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
@@ -368,7 +371,30 @@ namespace ProLogicReportingApplication
 
         #region Parent/Child Checkbox Manipulation
         /// <summary>
-        /// 
+        /// Item is a treeviewitem being passed in.
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="checkedState"></param>
+        private void SetParentChecks(TreeViewItem item, bool checkedState)
+        {
+            if (checkedState == true)
+            {
+                Console.WriteLine("SetParentChecks STATE -> " + checkedState.ToString());
+                CheckBox childsParentItem = item.Header as CheckBox;
+                childsParentItem.IsChecked = true;
+                childsParentItem.IsEnabled = true;
+            }
+            else
+            {
+                Console.WriteLine("SetParentChecks STATE -> " + checkedState.ToString());
+                CheckBox childsParentItem = item.Header as CheckBox;
+                childsParentItem.IsChecked = null;
+                childsParentItem.IsEnabled = true;
+            }
+        }
+
+        /// <summary>
+        /// Item is a treeviewitem being passed in.
         /// </summary>
         /// <param name="item"></param>
         /// <param name="checkedState"></param>
@@ -378,39 +404,19 @@ namespace ProLogicReportingApplication
             {
                 if(checkedState == true)
                 {
+                    Console.WriteLine("SetChildrenChecks STATE -> " + checkedState.ToString());
                     CheckBox parentHasChildItem = tv.Header as CheckBox;
                     parentHasChildItem.IsChecked = true;
                 }
                 else
                 {
+                    Console.WriteLine("SetChildrenChecks STATE -> " + checkedState.ToString());
                     CheckBox parentHasChildItem = tv.Header as CheckBox;
-                    parentHasChildItem.IsChecked = false;
+                    parentHasChildItem.IsChecked = null;
+                    //parentHasChildItem.IsEnabled = false;
                 }               
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="checkedState"></param>
-        private void SetParentChecks(TreeViewItem item, bool checkedState)
-        {
-
-            if (checkedState == true)
-            {
-                CheckBox childsParentItem = item.Header as CheckBox;
-                childsParentItem.IsChecked = true;
-                //childsParentItem.IsEnabled = false;
-            }
-            else
-            {
-                CheckBox childsParentItem = item.Header as CheckBox;
-                childsParentItem.IsChecked = false;
-                childsParentItem.IsEnabled = true;
-            }
-
-        }
+        }        
         #endregion
 
         #region Agent Report Cache Background Worker
@@ -477,7 +483,7 @@ namespace ProLogicReportingApplication
                 {
                     ReportDocument contractBidReportPreview = new ReportDocument();
                     string path = (ReportCacheDir + contractId + accountId + ".rpt");
-                    contractBidReportPreview.Load(path);
+                    contractBidReportPreview.Load(path);                    
                     bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
                 }
                 else
@@ -499,5 +505,11 @@ namespace ProLogicReportingApplication
             }           
         }
         #endregion
+
+        private void CheckBox_Click(object sender, RoutedEventArgs e) { OnCheck(); }
+        public void OnCheck()
+        {
+
+        }
     }
 }
