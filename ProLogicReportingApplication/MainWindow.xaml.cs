@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-//using System.Drawing;
+using System.Drawing;
 using System.Data;
 using System.Windows.Data;
 using System.Windows.Documents;
@@ -52,7 +52,10 @@ namespace ProLogicReportingApplication
         public MainWindow()
         {
             InitializeComponent();
-            // Call to Nucleus to get the data to populate the tree view
+            //string[] args = Environment.GetCommandLineArgs();
+            //MessageBox.Show(args[1]);
+            // pass args[1] to LoadContacts 
+            // Call to Nucleus to get the data to populate the tree view            
             contractId = "00002";
             LoadContacts(contractId);            
         }
@@ -84,11 +87,13 @@ namespace ProLogicReportingApplication
                     ToBeCahcedReports.Add(myItem);
                 }
             }
-            AgentReportCacheWorker(ToBeCahcedReports);            
-
+            AgentReportCacheWorker(ToBeCahcedReports);
+            
             return null;
         }
         #endregion
+
+        
 
         /// <summary>
         /// This will handle Selected Item Changes
@@ -108,7 +113,44 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         private void btn_SendBid_Click(object sender, RoutedEventArgs e)
         {
-            // Add smtp email stuff here
+            try
+            {
+                MailMessage msg = new MailMessage();
+                msg.Subject = "Testing Email";
+                msg.From = new System.Net.Mail.MailAddress("darrenm@360sheetmetal.com");
+                msg.To.Add(new System.Net.Mail.MailAddress("darrenm@360sheetmetal.com"));
+                msg.Body = "testing the email";
+
+                SmtpClient smtp = new SmtpClient();
+                smtp.Host = "smtp.office365.com";
+                smtp.Port = 587;
+                smtp.EnableSsl = true;
+                smtp.Credentials = new System.Net.NetworkCredential("username", "pass");
+                smtp.Send(msg);
+                //// Add smtp email stuff here
+                //SmtpClient MyServer = new SmtpClient();
+                //MyServer.Host = "smtp.office365.com";
+                //MyServer.Port = 587;
+                //MyServer.EnableSsl = true;
+                ////Server Credentials
+                //NetworkCredential NC = new NetworkCredential();
+                //NC.UserName = "";
+                //NC.Password = "";
+                ////assigned credetial details to server
+                //MyServer.Credentials = NC;
+                //MailAddress from = new MailAddress("darrenm@360sheetmetal.com", "Darren");
+                //MailAddress receiver = new MailAddress("darrenm@360sheetmetal.com", "ME");
+                //MailMessage Mymessage = new MailMessage(from, receiver);
+                //Mymessage.Subject = "test";
+                //Mymessage.Body = "test";
+                ////sends the email
+                //MyServer.Send(Mymessage);
+            }
+            catch (Exception es)
+            {
+                Console.WriteLine(es.ToString());
+            }
+
         }
         #endregion
 
@@ -378,15 +420,12 @@ namespace ProLogicReportingApplication
         /// <param name="reportsReadyForCache"></param>
         private void AgentReportCacheWorker(List<KeyValuePair<string, string>> reportsReadyForCache)
         {
-            BackgroundWorker worker = new BackgroundWorker();
-            //worker.WorkerReportsProgress = true;
+            BackgroundWorker worker = new BackgroundWorker();            
             worker.DoWork += reportPreviewCacheWorker;
-            //worker.ProgressChanged += worker_ProgressChanged;
-            //worker.RunWorkerCompleted += worker_RunWorkerCompleted;
+            //worker.RunWorkerCompleted += startGarbageCollector;
             worker.RunWorkerAsync(reportsReadyForCache);
         }
-
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -400,7 +439,7 @@ namespace ProLogicReportingApplication
             {
                 ContractBidReportCache(combo_contractaccount.Key, combo_contractaccount.Value);
             }
-        }
+        }        
         #endregion
 
         #region Application Report Cache
