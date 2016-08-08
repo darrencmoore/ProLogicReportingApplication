@@ -29,6 +29,7 @@ using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
 using System.Reflection;
 using SAPBusinessObjects.WPF.Viewer;
+using Encore;
 
 /// <summary>
 /// Created By Darren Moore
@@ -43,21 +44,23 @@ namespace ProLogicReportingApplication
     public partial class MainWindow : Window 
     {        
         private List<string> proLogic_ContractContacts = new List<string>();        
-        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
-        private Timer _mouseClickTimer = null;
-        private int userClicks;
+        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();       
+        //private Timer _mouseClickTimer = null;
+        //private int userClicks;
         private static string contractId;
         private static string ReportCacheDir = @"C:\AgentReportCache\";
+        private static string SMTPserver = "smtp.office365.com";
+        private static string currentReport;
 
         public MainWindow()
         {
-            InitializeComponent();
+            InitializeComponent();           
             //string[] args = Environment.GetCommandLineArgs();
             //MessageBox.Show(args[1]);
             // pass args[1] to LoadContacts 
             // Call to Nucleus to get the data to populate the tree view            
             contractId = "00002";
-            LoadContacts(contractId);            
+            LoadContacts(contractId);
         }
 
         #region Load Contacts
@@ -70,11 +73,11 @@ namespace ProLogicReportingApplication
         /// <returns></returns>
         public string LoadContacts(string contractId)
         {            
-            List<KeyValuePair<string, string>> ToBeCahcedReports = new List<KeyValuePair<string, string>>();
+            List<KeyValuePair<string, string>> ToBeCachedReports = new List<KeyValuePair<string, string>>();
             Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.GetContacts(contractId);
             // Adds the list from Nucleus.Agent                      
-            proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);
+            proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);            
             // Copies ProLogic_zContractContacts to an observable collection
             // This is to be used for the treeview           
             proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
@@ -84,10 +87,10 @@ namespace ProLogicReportingApplication
                 {                    
                     string accountId = item.Remove(4);
                     KeyValuePair<string, string> myItem = new KeyValuePair<string, string>(contractId, accountId);
-                    ToBeCahcedReports.Add(myItem);
+                    ToBeCachedReports.Add(myItem);
                 }
             }
-            AgentReportCacheWorker(ToBeCahcedReports);
+            AgentReportCacheWorker(ToBeCachedReports);
             
             return null;
         }
@@ -115,18 +118,27 @@ namespace ProLogicReportingApplication
         {
             try
             {
+                //Encore.Utilities dll = new Encore.Utilities();
+                //dll.Logon("ADMIN", " ", "TEST [TEST FOR 360 SHEET METAL LLC]", " ", Encore.Language.ENGLISH, 0, 0, " ");
+                //good below here
                 MailMessage msg = new MailMessage();
                 msg.Subject = "Testing Email";
-                msg.From = new System.Net.Mail.MailAddress("darrenm@360sheetmetal.com");
-                msg.To.Add(new System.Net.Mail.MailAddress("darrenm@360sheetmetal.com"));
-                msg.Body = "testing the email";
+                msg.From = new MailAddress("darrenm@360sheetmetal.com");
+                msg.To.Add(new MailAddress("darrenm@360sheetmetal.com"));
+                msg.Body = "Email Sent from Bid Report Application";
+                Attachment bidReport = new Attachment(currentReport + ".pdf"); // rename to bid proposal before sending email
+                msg.Attachments.Add(bidReport);
 
-                SmtpClient smtp = new SmtpClient();
-                smtp.Host = "smtp.office365.com";
+                SmtpClient smtp = new SmtpClient(SMTPserver);
+                //smtp.Host = "smtp.office365.com";
                 smtp.Port = 587;
                 smtp.EnableSsl = true;
-                smtp.Credentials = new System.Net.NetworkCredential("username", "pass");
+                smtp.UseDefaultCredentials = false;
+                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
                 smtp.Send(msg);
+                MessageBox.Show("Mail Sent");
+                //good above here
                 //// Add smtp email stuff here
                 //SmtpClient MyServer = new SmtpClient();
                 //MyServer.Host = "smtp.office365.com";
@@ -229,10 +241,11 @@ namespace ProLogicReportingApplication
             }                    
         }
         #endregion
+
         #region Mouse Click Handler
         private void mouseClickHandler(object sender, EventArgs e)
         {
-            NodeCheck(sender as DependencyObject);
+            NodeCheck(sender as DependencyObject);           
         }
         #endregion
         
@@ -269,7 +282,8 @@ namespace ProLogicReportingApplication
                         {
                             if (parentTreeItemChkBox.IsChecked == true)
                             {
-                                Console.WriteLine("Parent Check Box Checked  -> " + parentTreeItemChkBox);
+                                //Console.WriteLine("Parent Check Box Checked  -> " + parentTreeItemChkBox);
+                                Console.WriteLine("LIst Count" + proLogic_ContractContactsObservable.Count());
                                 SetChildrenChecks(item, true);                                    
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
                             }
@@ -292,7 +306,7 @@ namespace ProLogicReportingApplication
                             if (childTreeItemChkBox.IsChecked == true)
                             {
                                 Console.WriteLine("Child Check Box Checked  -> " + childTreeItemChkBox);
-                                Console.WriteLine("Parent -> " + item.Parent.ToString());
+                                Console.WriteLine("Parent -> " + item.Parent.ToString());                                
                                 SetParentChecks((TreeViewItem)item.Parent, true);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
@@ -411,7 +425,8 @@ namespace ProLogicReportingApplication
             contractBidReportPreviewCache.Load(path);
             contractBidReportPreviewCache.SetDataSource(reportPreviewCacheTable);
             contractBidReportPreviewCache.Refresh();            
-            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId + ".rpt" );            
+            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId + ".rpt" );
+            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, ReportCacheDir + "Bid Proposal" + "_" + contractId + accountId + ".pdf");
         }
         #endregion
 
@@ -430,6 +445,7 @@ namespace ProLogicReportingApplication
                 {
                     ReportDocument contractBidReportPreview = new ReportDocument();
                     string path = (ReportCacheDir + contractId + accountId + ".rpt");
+                    currentReport = ReportCacheDir + contractId + accountId;
                     contractBidReportPreview.Load(path);                    
                     bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
                 }
@@ -453,10 +469,10 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
-        private void CheckBox_Click(object sender, RoutedEventArgs e) { OnCheck(); }
-        public void OnCheck()
-        {
-
-        }
+        //private void CheckBox_Click(object sender, RoutedEventArgs e) { OnCheck(); }
+        //public void OnCheck()
+        //{
+        //    Encore.Utilities dll = new Encore.Utilities();
+        //}
     }
 }
