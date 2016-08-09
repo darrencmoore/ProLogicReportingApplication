@@ -49,7 +49,7 @@ namespace ProLogicReportingApplication
         //private int userClicks;
         private static string contractId;
         private static string ReportCacheDir = @"C:\AgentReportCache\";
-        private static string SMTPserver = "smtp.office365.com";
+        private static string SmtpServer = "smtp.office365.com";
         private static string currentReport;
 
         public MainWindow()
@@ -85,7 +85,7 @@ namespace ProLogicReportingApplication
             {
                 if(item.Contains("{ Header = Item Level 0 }"))
                 {                    
-                    string accountId = item.Remove(4);
+                    string accountId = item.Substring(0, item.IndexOf("{")); 
                     KeyValuePair<string, string> myItem = new KeyValuePair<string, string>(contractId, accountId);
                     ToBeCachedReports.Add(myItem);
                 }
@@ -106,65 +106,7 @@ namespace ProLogicReportingApplication
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Console.WriteLine("TreeView Collapsed");
-        }
-
-        #region Email Send
-        /// <summary>
-        /// Bid Email Send
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btn_SendBid_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //Encore.Utilities dll = new Encore.Utilities();
-                //dll.Logon("ADMIN", " ", "TEST [TEST FOR 360 SHEET METAL LLC]", " ", Encore.Language.ENGLISH, 0, 0, " ");
-                //good below here
-                MailMessage msg = new MailMessage();
-                msg.Subject = "Testing Email";
-                msg.From = new MailAddress("darrenm@360sheetmetal.com");
-                msg.To.Add(new MailAddress("darrenm@360sheetmetal.com"));
-                msg.Body = "Email Sent from Bid Report Application";
-                Attachment bidReport = new Attachment(currentReport + ".pdf"); // rename to bid proposal before sending email
-                msg.Attachments.Add(bidReport);
-
-                SmtpClient smtp = new SmtpClient(SMTPserver);
-                //smtp.Host = "smtp.office365.com";
-                smtp.Port = 587;
-                smtp.EnableSsl = true;
-                smtp.UseDefaultCredentials = false;
-                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
-                smtp.Send(msg);
-                MessageBox.Show("Mail Sent");
-                //good above here
-                //// Add smtp email stuff here
-                //SmtpClient MyServer = new SmtpClient();
-                //MyServer.Host = "smtp.office365.com";
-                //MyServer.Port = 587;
-                //MyServer.EnableSsl = true;
-                ////Server Credentials
-                //NetworkCredential NC = new NetworkCredential();
-                //NC.UserName = "";
-                //NC.Password = "";
-                ////assigned credetial details to server
-                //MyServer.Credentials = NC;
-                //MailAddress from = new MailAddress("darrenm@360sheetmetal.com", "Darren");
-                //MailAddress receiver = new MailAddress("darrenm@360sheetmetal.com", "ME");
-                //MailMessage Mymessage = new MailMessage(from, receiver);
-                //Mymessage.Subject = "test";
-                //Mymessage.Body = "test";
-                ////sends the email
-                //MyServer.Send(Mymessage);
-            }
-            catch (Exception es)
-            {
-                Console.WriteLine(es.ToString());
-            }
-
-        }
-        #endregion
+        }        
 
         #region TreeView Load 
         /// <summary>
@@ -184,7 +126,10 @@ namespace ProLogicReportingApplication
             TreeViewItem empItem = new TreeViewItem();           
             TreeViewItem empEmailAddrItem = new TreeViewItem();            
             TreeView tree = sender as TreeView;
-            
+            string accountItemTag = null;
+            string empItemTag = null;
+
+
 
             for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
             {
@@ -193,7 +138,8 @@ namespace ProLogicReportingApplication
                 {                 
                     accountItem = new TreeViewItem();
                     // Removing everything after the account ID for the Tag
-                    accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Remove(5);
+                    accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Substring(0, proLogic_ContractContactsObservable[i].IndexOf("{")); 
+                    accountItemTag = accountItem.Tag.ToString().Replace(" ", string.Empty);
                     accountItem.IsExpanded = false;
                     accountItem.FontWeight = FontWeights.Black;
                     CheckBox accountCheckBox = new CheckBox();
@@ -212,7 +158,8 @@ namespace ProLogicReportingApplication
                 {                    
                     empItem = new TreeViewItem();
                     // Removing everything after the account ID for the Tag
-                    empItem.Tag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5);
+                    empItemTag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5).TrimEnd() + accountItemTag.Remove(0, 13);
+                    empItem.Tag = empItemTag;
                     empItem.FontWeight = FontWeights.Black;
                     CheckBox empItemCheckBox = new CheckBox();
                     empItemCheckBox.IsChecked = true;
@@ -285,13 +232,17 @@ namespace ProLogicReportingApplication
                                 //Console.WriteLine("Parent Check Box Checked  -> " + parentTreeItemChkBox);
                                 Console.WriteLine("LIst Count" + proLogic_ContractContactsObservable.Count());
                                 SetChildrenChecks(item, true);                                    
-                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());                                
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));                                
                             }
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Parent Check Box is Unchecked -> " + parentTreeItemChkBox);
                                 //SetChildrenChecks(item, true);
-                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim());
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));
+                            }
+                            else if (parentTreeItemChkBox.IsChecked == null)
+                            {
+                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));
                             }
                         }
                     }
@@ -392,15 +343,15 @@ namespace ProLogicReportingApplication
             //worker.RunWorkerCompleted += startGarbageCollector;
             worker.RunWorkerAsync(reportsReadyForCache);
         }
-        
+
         /// <summary>
-        /// 
+        /// Background worker event handler 
+        /// Calls ContractBidReportCache to store the generated reports on load
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         void reportPreviewCacheWorker(object sender, DoWorkEventArgs e)
         {
-            Nucleus.Agent _agent = new Nucleus.Agent();
             List<KeyValuePair<string, string>> reportsReadyForCache = (List<KeyValuePair<string, string>>)e.Argument;
             foreach(KeyValuePair<string, string> combo_contractaccount in reportsReadyForCache)
             {
@@ -416,17 +367,17 @@ namespace ProLogicReportingApplication
         /// <param name="contractId"></param>
         /// <param name="accountId"></param>
         private void ContractBidReportCache(string contractId, string accountId)
-        {
+        {             
             Nucleus.Agent _agent = new Nucleus.Agent();
             DataTable reportPreviewCacheTable = new DataTable();            
-            reportPreviewCacheTable = _agent.ReportPreview(contractId, accountId);
+            reportPreviewCacheTable = _agent.ReportPreview(contractId, accountId.Remove(5).Trim());
             ReportDocument contractBidReportPreviewCache = new ReportDocument();
-            var path = ("C:\\Users\\darrenm\\Desktop\\ProLogicReportingApplication\\ProLogicReportingApplication\\ContractBidReport.rpt");
+            var path = (@"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt");
             contractBidReportPreviewCache.Load(path);
             contractBidReportPreviewCache.SetDataSource(reportPreviewCacheTable);
             contractBidReportPreviewCache.Refresh();            
-            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId + ".rpt" );
-            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, ReportCacheDir + "Bid Proposal" + "_" + contractId + accountId + ".pdf");
+            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".rpt");
+            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".pdf");
         }
         #endregion
 
@@ -445,7 +396,8 @@ namespace ProLogicReportingApplication
                 {
                     ReportDocument contractBidReportPreview = new ReportDocument();
                     string path = (ReportCacheDir + contractId + accountId + ".rpt");
-                    currentReport = ReportCacheDir + contractId + accountId;
+                    Console.WriteLine(path);
+                    currentReport = ReportCacheDir + contractId + accountId + ".pdf";
                     contractBidReportPreview.Load(path);                    
                     bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
                 }
@@ -469,10 +421,61 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
-        //private void CheckBox_Click(object sender, RoutedEventArgs e) { OnCheck(); }
-        //public void OnCheck()
-        //{
-        //    Encore.Utilities dll = new Encore.Utilities();
-        //}
+        #region Email Send
+        /// <summary>
+        /// Starts a background worker thread SendEmail
+        ///  
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_SendBid_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                BackgroundWorker emailSendWorker = new BackgroundWorker();
+                emailSendWorker.DoWork += SendEmail;
+                emailSendWorker.RunWorkerAsync();
+                //Encore.Utilities dll = new Encore.Utilities();
+                //dll.Logon("ADMIN", " ", "TEST [TEST FOR 360 SHEET METAL LLC]", " ", Encore.Language.ENGLISH, 0, 0, " ");                
+            }
+            catch (Exception es)
+            {
+                Console.WriteLine(es.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Send a email to a list of recipients
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SendEmail(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                MailMessage msg = new MailMessage();
+                msg.Subject = "Testing Email";
+                msg.From = new MailAddress("darrenm@360sheetmetal.com");
+                msg.To.Add(new MailAddress("darrenm@360sheetmetal.com"));
+                msg.Body = "Email Sent from Bid Report Application";
+                Attachment bidProposal = new Attachment(currentReport);
+                bidProposal.Name = "Bid Proposal - Job Name: " + currentReport.Remove(0, 29);
+                msg.Attachments.Add(bidProposal);
+
+                SmtpClient smtp = new SmtpClient(SmtpServer);
+                smtp.Port = 587;
+                smtp.EnableSsl = true;
+                smtp.UseDefaultCredentials = false;
+                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
+                smtp.Send(msg);
+                MessageBox.Show("Mail Sent");
+            }
+            catch (Exception ec)
+            {
+                Console.WriteLine(ec.ToString());
+            }
+        }        
+        #endregion
     }
 }
