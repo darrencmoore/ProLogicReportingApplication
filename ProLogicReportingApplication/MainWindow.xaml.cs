@@ -3,33 +3,14 @@ using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Drawing;
 using System.Data;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Data.SqlClient;
-using System.Web;
-using Nucleus;
-using System.Timers;
 using System.Collections.ObjectModel;
-using System.Runtime.InteropServices;
-using System.Runtime.Caching;
 using System.Net;
 using System.Net.Mail;
 using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
-using System.Reflection;
-using SAPBusinessObjects.WPF.Viewer;
-using Encore;
 
 /// <summary>
 /// Created By Darren Moore
@@ -44,13 +25,12 @@ namespace ProLogicReportingApplication
     public partial class MainWindow : Window 
     {        
         private List<string> proLogic_ContractContacts = new List<string>();        
-        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();       
-        //private Timer _mouseClickTimer = null;
-        //private int userClicks;
+        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private static string contractId;
         private static string ReportCacheDir = @"C:\AgentReportCache\";
         private static string SmtpServer = "smtp.office365.com";
         private static string currentReport;
+        private ReportDocument contractBidReportPreview = new ReportDocument();
 
         public MainWindow()
         {
@@ -72,31 +52,36 @@ namespace ProLogicReportingApplication
         /// <param name="contractId"></param>
         /// <returns></returns>
         public string LoadContacts(string contractId)
-        {            
-            List<KeyValuePair<string, string>> ToBeCachedReports = new List<KeyValuePair<string, string>>();
-            Nucleus.Agent _agent = new Nucleus.Agent();
-            _agent.GetContacts(contractId);
-            // Adds the list from Nucleus.Agent                      
-            proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);            
-            // Copies ProLogic_zContractContacts to an observable collection
-            // This is to be used for the treeview           
-            proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
-            foreach(var item in proLogic_ContractContactsObservable)
+        { 
+            try
             {
-                if(item.Contains("{ Header = Item Level 0 }"))
-                {                    
-                    string accountId = item.Substring(0, item.IndexOf("{")); 
-                    KeyValuePair<string, string> myItem = new KeyValuePair<string, string>(contractId, accountId);
-                    ToBeCachedReports.Add(myItem);
+                List<KeyValuePair<string, string>> ToBeCachedReports = new List<KeyValuePair<string, string>>();
+                Nucleus.Agent _agent = new Nucleus.Agent();
+                _agent.GetContacts(contractId);
+                // Adds the list from Nucleus.Agent                      
+                proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);
+                // Copies ProLogic_zContractContacts to an observable collection
+                // This is to be used for the treeview           
+                proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
+                foreach (var item in proLogic_ContractContactsObservable)
+                {
+                    if (item.Contains("{ Header = Item Level 0 }"))
+                    {
+                        string accountId = item.Substring(0, item.IndexOf("{"));
+                        KeyValuePair<string, string> myItem = new KeyValuePair<string, string>(contractId, accountId);
+                        ToBeCachedReports.Add(myItem);
+                    }
                 }
+                AgentReportCacheWorker(ToBeCachedReports);
             }
-            AgentReportCacheWorker(ToBeCachedReports);
+            catch(Exception LoadContactsException)
+            {
+                MessageBox.Show(LoadContactsException.ToString());
+            }
             
             return null;
         }
-        #endregion
-
-        
+        #endregion        
 
         /// <summary>
         /// This will handle Selected Item Changes
@@ -129,63 +114,68 @@ namespace ProLogicReportingApplication
             string accountItemTag = null;
             string empItemTag = null;
 
-
-
-            for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
+            try
             {
-                //AccountName = Level 0                       
-                if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 0 }"))
-                {                 
-                    accountItem = new TreeViewItem();
-                    // Removing everything after the account ID for the Tag
-                    accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Substring(0, proLogic_ContractContactsObservable[i].IndexOf("{")); 
-                    accountItemTag = accountItem.Tag.ToString().Replace(" ", string.Empty);
-                    accountItem.IsExpanded = false;
-                    accountItem.FontWeight = FontWeights.Black;
-                    CheckBox accountCheckBox = new CheckBox();
-                    accountCheckBox.IsChecked = true;
-                    accountCheckBox.IsEnabled = true;
-                    accountCheckBox.Focusable = true;
-                    accountCheckBox.IsThreeState = true;
-                    accountCheckBox.Name = "ParentChkBox";
-                    accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
-                    accountCheckBox.Click += mouseClickHandler;
-                    accountItem.Header = accountCheckBox;
-                    tree.Items.Add(accountItem);                                     
+                for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
+                {
+                    //AccountName = Level 0                       
+                    if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 0 }"))
+                    {
+                        accountItem = new TreeViewItem();
+                        // Removing everything after the account ID for the Tag
+                        accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Substring(0, proLogic_ContractContactsObservable[i].IndexOf("{"));
+                        accountItemTag = accountItem.Tag.ToString().Replace(" ", string.Empty);
+                        accountItem.IsExpanded = false;
+                        accountItem.FontWeight = FontWeights.Black;
+                        CheckBox accountCheckBox = new CheckBox();
+                        accountCheckBox.IsChecked = true;
+                        accountCheckBox.IsEnabled = true;
+                        accountCheckBox.Focusable = true;
+                        accountCheckBox.IsThreeState = true;
+                        accountCheckBox.Name = "ParentChkBox";
+                        accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
+                        accountCheckBox.Click += mouseClickHandler;
+                        accountItem.Header = accountCheckBox;
+                        tree.Items.Add(accountItem);
+                    }
+                    //ContactFullName = Level 1
+                    if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
+                    {
+                        empItem = new TreeViewItem();
+                        // Removing everything after the account ID for the Tag
+                        empItemTag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5).TrimEnd() + accountItemTag.Remove(0, 12);
+                        empItem.Tag = empItemTag;
+                        empItem.FontWeight = FontWeights.Black;
+                        CheckBox empItemCheckBox = new CheckBox();
+                        empItemCheckBox.IsChecked = true;
+                        empItemCheckBox.IsEnabled = true;
+                        empItemCheckBox.Focusable = true;
+                        empItemCheckBox.Name = "ChildChkBox";
+                        empItemCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 1 }", "");
+                        empItemCheckBox.Click += mouseClickHandler;
+                        empItem.Header = empItemCheckBox;
+                        accountItem.Items.Add(empItem);
+                    }
+                    //Contact Email Address = Level 2
+                    if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 2 }"))
+                    {
+                        empEmailAddrItem = new TreeViewItem();
+                        empEmailAddrItem.Tag = "{Email} " + proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                        empEmailAddrItem.FontWeight = FontWeights.Black;
+                        CheckBox empEmailAddrCheckBox = new CheckBox();
+                        empEmailAddrCheckBox.IsChecked = true;
+                        empEmailAddrCheckBox.IsEnabled = false;
+                        empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "");
+                        empEmailAddrCheckBox.Click += mouseClickHandler;
+                        empEmailAddrItem.Header = empEmailAddrCheckBox;
+                        empItem.Items.Add(empEmailAddrItem);
+                    }
                 }
-                //ContactFullName = Level 1
-                if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 1 }"))
-                {                    
-                    empItem = new TreeViewItem();
-                    // Removing everything after the account ID for the Tag
-                    empItemTag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5).TrimEnd() + accountItemTag.Remove(0, 12);
-                    empItem.Tag = empItemTag;
-                    empItem.FontWeight = FontWeights.Black;
-                    CheckBox empItemCheckBox = new CheckBox();
-                    empItemCheckBox.IsChecked = true;
-                    empItemCheckBox.IsEnabled = true;
-                    empItemCheckBox.Focusable = true;
-                    empItemCheckBox.Name = "ChildChkBox";
-                    empItemCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 1 }", "");
-                    empItemCheckBox.Click += mouseClickHandler;
-                    empItem.Header = empItemCheckBox;                   
-                    accountItem.Items.Add(empItem);
-                }
-                //Contact Email Address = Level 2
-                if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 2 }"))
-                {                    
-                    empEmailAddrItem = new TreeViewItem();
-                    empEmailAddrItem.Tag = "{Email} " + proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
-                    empEmailAddrItem.FontWeight = FontWeights.Black;
-                    CheckBox empEmailAddrCheckBox = new CheckBox();
-                    empEmailAddrCheckBox.IsChecked = true;
-                    empEmailAddrCheckBox.IsEnabled = false;
-                    empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 2 }", "");
-                    empEmailAddrCheckBox.Click += mouseClickHandler;
-                    empEmailAddrItem.Header = empEmailAddrCheckBox;
-                    empItem.Items.Add(empEmailAddrItem);                    
-                }                
-            }                    
+            }
+            catch (Exception trvAccount_AccountContactsLoadedException)
+            {
+                MessageBox.Show(trvAccount_AccountContactsLoadedException.ToString());
+            }                                
         }
         #endregion
 
@@ -237,7 +227,7 @@ namespace ProLogicReportingApplication
                             else if (parentTreeItemChkBox.IsChecked == false)
                             {
                                 Console.WriteLine("Parent Check Box is Unchecked -> " + parentTreeItemChkBox);
-                                //SetChildrenChecks(item, true);
+                                SetChildrenChecks(item, false);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));
                             }
                             else if (parentTreeItemChkBox.IsChecked == null)
@@ -272,9 +262,9 @@ namespace ProLogicReportingApplication
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception NodeCheckException)
             {
-                Console.WriteLine(e.ToString());
+                MessageBox.Show(NodeCheckException.ToString());
             }
 
             return item;            
@@ -291,17 +281,41 @@ namespace ProLogicReportingApplication
         {
             if (checkedState == true)
             {
-                Console.WriteLine("SetParentChecks STATE -> " + checkedState.ToString());
-                CheckBox childsParentItem = item.Header as CheckBox;
-                childsParentItem.IsChecked = true;
-                childsParentItem.IsEnabled = true;
+                List<CheckBox> childCheckBoxList = new List<CheckBox>();
+                foreach (TreeViewItem c in item.Items)
+                {
+                    CheckBox chbox = new CheckBox();                    
+                    chbox = c.Header as CheckBox;
+                    childCheckBoxList.Add(chbox);
+                }
+                if (childCheckBoxList.All(a => a.IsChecked == true))
+                {
+                    CheckBox childsParentItem = item.Header as CheckBox;
+                    childsParentItem.IsChecked = true;
+                    childsParentItem.IsEnabled = true;
+                }
+                else
+                {
+                    CheckBox childsParentItem = item.Header as CheckBox;
+                    childsParentItem.IsChecked = true;
+                    childsParentItem.IsEnabled = false;
+                }                
             }
-            else
+            else //checkedState == false
             {
-                Console.WriteLine("SetParentChecks STATE -> " + checkedState.ToString());
-                CheckBox childsParentItem = item.Header as CheckBox;
-                childsParentItem.IsChecked = null;
-                childsParentItem.IsEnabled = true;
+                List<CheckBox> childCheckBoxList = new List<CheckBox>();
+                foreach (TreeViewItem c in item.Items)
+                {
+                    CheckBox chbox = new CheckBox();                    
+                    chbox = c.Header as CheckBox;                        
+                    childCheckBoxList.Add(chbox);       
+                }
+                if (childCheckBoxList.Any(a => a.IsChecked == false))
+                {
+                    CheckBox childsParentItem = item.Header as CheckBox;
+                    childsParentItem.IsChecked = true;
+                    //childsParentItem.IsEnabled = false;
+                }
             }
         }
 
@@ -314,34 +328,44 @@ namespace ProLogicReportingApplication
         {
             foreach(TreeViewItem tv in item.Items)
             {
-                if(checkedState == true)
+                CheckBox parentHasChildItem = tv.Header as CheckBox;
+                if (checkedState == true)
                 {
                     Console.WriteLine("SetChildrenChecks STATE -> " + checkedState.ToString());
-                    CheckBox parentHasChildItem = tv.Header as CheckBox;
                     parentHasChildItem.IsChecked = true;
                 }
+                else if(checkedState == false)
+                {
+                    parentHasChildItem.IsChecked = false;
+                }                
                 else
                 {
                     Console.WriteLine("SetChildrenChecks STATE -> " + checkedState.ToString());
-                    CheckBox parentHasChildItem = tv.Header as CheckBox;
-                    parentHasChildItem.IsChecked = null;
-                    //parentHasChildItem.IsEnabled = false;
+                    parentHasChildItem.IsChecked = true;
+                    parentHasChildItem.IsEnabled = false;
                 }               
             }
         }        
         #endregion
 
-        #region Agent Report Cache Background Worker
+        #region Agent Report Cache BackgroundWorker
         /// <summary>
         /// Worker for Caching reports. Calls reportPreviewCacheWorker to cache genereated reports
         /// </summary>
         /// <param name="reportsReadyForCache"></param>
         private void AgentReportCacheWorker(List<KeyValuePair<string, string>> reportsReadyForCache)
         {
-            BackgroundWorker worker = new BackgroundWorker();            
-            worker.DoWork += reportPreviewCacheWorker;
-            //worker.RunWorkerCompleted += startGarbageCollector;
-            worker.RunWorkerAsync(reportsReadyForCache);
+            try
+            {
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.DoWork += reportPreviewCacheWorker;
+                //worker.RunWorkerCompleted += startGarbageCollector;
+                worker.RunWorkerAsync(reportsReadyForCache);
+            }
+            catch (Exception AgentReportCacheWorkerExeption)
+            {
+                MessageBox.Show(AgentReportCacheWorkerExeption.ToString());
+            }            
         }
 
         /// <summary>
@@ -367,17 +391,24 @@ namespace ProLogicReportingApplication
         /// <param name="contractId"></param>
         /// <param name="accountId"></param>
         private void ContractBidReportCache(string contractId, string accountId)
-        {             
-            Nucleus.Agent _agent = new Nucleus.Agent();
-            DataTable reportPreviewCacheTable = new DataTable();            
-            reportPreviewCacheTable = _agent.ReportPreview(contractId, accountId.Remove(5).Trim());
-            ReportDocument contractBidReportPreviewCache = new ReportDocument();
-            var path = (@"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt");
-            contractBidReportPreviewCache.Load(path);
-            contractBidReportPreviewCache.SetDataSource(reportPreviewCacheTable);
-            contractBidReportPreviewCache.Refresh();            
-            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".rpt");
-            contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".pdf");
+        {
+            try
+            {
+                Nucleus.Agent _agent = new Nucleus.Agent();
+                DataTable reportPreviewCacheTable = new DataTable();
+                reportPreviewCacheTable = _agent.ReportPreview(contractId, accountId.Remove(5).Trim());
+                ReportDocument contractBidReportPreviewCache = new ReportDocument();
+                var path = (@"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt");
+                contractBidReportPreviewCache.Load(path);
+                contractBidReportPreviewCache.SetDataSource(reportPreviewCacheTable);
+                contractBidReportPreviewCache.Refresh();
+                contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".rpt");
+                contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".pdf");
+            }
+            catch (Exception ContractBidReportCacheException)
+            {
+                MessageBox.Show(ContractBidReportCacheException.ToString());
+            }
         }
         #endregion
 
@@ -390,42 +421,42 @@ namespace ProLogicReportingApplication
         private void ContractBidReportPreview(string contractId, string accountId)
         {
             try
-            {
+            {                
                 var cachedReportFile = Directory.GetFiles(ReportCacheDir, contractId + accountId + ".rpt");
                 if(cachedReportFile != null)
-                {
-                    ReportDocument contractBidReportPreview = new ReportDocument();
+                {                    
                     string path = (ReportCacheDir + contractId + accountId + ".rpt");
-                    Console.WriteLine(path);
                     currentReport = ReportCacheDir + contractId + accountId + ".pdf";
-                    contractBidReportPreview.Load(path);                    
+                    contractBidReportPreview.Load(path);
                     bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
                 }
                 else
                 {
                     //generate report here
-                }                
+                }               
             }
-            catch (LogOnException e)
+            catch (LogOnException ContractBidReportPreview_LogOnException)
             {
-                Console.WriteLine(e.ToString());
+                MessageBox.Show(ContractBidReportPreview_LogOnException.ToString());
             }
-            catch (DataSourceException e)
+            catch (DataSourceException ContractBidReportPreview_DataSourceException)
             {
-                Console.WriteLine(e.ToString());
+                MessageBox.Show(ContractBidReportPreview_DataSourceException.ToString());
             } 
-            catch (EngineException engEx)
+            catch (EngineException ContractBidReportPreview_EngineException)
             {
-                Console.WriteLine(engEx.ToString());
+                MessageBox.Show(ContractBidReportPreview_EngineException.ToString());
+            }
+            catch (OutOfMemoryException ContractBidReportPreview_OutOfMemoryException)
+            {
+                MessageBox.Show(ContractBidReportPreview_OutOfMemoryException.ToString());
             }           
         }
         #endregion
 
-
         #region Send Bid Click
         /// <summary>
-        /// Starts a background worker thread SendEmail
-        ///  
+        /// Starts a background worker thread SendEmail  
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -438,9 +469,9 @@ namespace ProLogicReportingApplication
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
                 emailSendWorker.RunWorkerAsync();
             }
-            catch (Exception es)
+            catch (Exception SendBindClickException)
             {
-                Console.WriteLine(es.ToString());
+                MessageBox.Show(SendBindClickException.ToString());
             }
         }
         #endregion
@@ -473,9 +504,9 @@ namespace ProLogicReportingApplication
                 smtp.Send(msg);
                 MessageBox.Show("Mail Sent");
             }
-            catch (Exception ec)
+            catch (Exception SendEmailException)
             {
-                Console.WriteLine(ec.ToString());
+                MessageBox.Show(SendEmailException.ToString());
             }
         }
         #endregion
@@ -483,8 +514,8 @@ namespace ProLogicReportingApplication
         #region Post To Syspro
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
         {
-            //Encore.Utilities dll = new Encore.Utilities();
-            //dll.Logon("ADMIN", " ", "TEST [TEST FOR 360 SHEET METAL LLC]", " ", Encore.Language.ENGLISH, 0, 0, " ");    
+            Nucleus.Agent _agent = new Nucleus.Agent();
+            _agent.PostXmlForSyspro();
         }
         #endregion
     }
