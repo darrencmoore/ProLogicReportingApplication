@@ -158,7 +158,7 @@ namespace ProLogicReportingApplication
                 {                    
                     empItem = new TreeViewItem();
                     // Removing everything after the account ID for the Tag
-                    empItemTag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5).TrimEnd() + accountItemTag.Remove(0, 13);
+                    empItemTag = "{Child} " + proLogic_ContractContactsObservable[i].Remove(5).TrimEnd() + accountItemTag.Remove(0, 12);
                     empItem.Tag = empItemTag;
                     empItem.FontWeight = FontWeights.Black;
                     CheckBox empItemCheckBox = new CheckBox();
@@ -180,7 +180,7 @@ namespace ProLogicReportingApplication
                     CheckBox empEmailAddrCheckBox = new CheckBox();
                     empEmailAddrCheckBox.IsChecked = true;
                     empEmailAddrCheckBox.IsEnabled = false;
-                    empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                    empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0,4).Replace("{ Header = Item Level 2 }", "");
                     empEmailAddrCheckBox.Click += mouseClickHandler;
                     empEmailAddrItem.Header = empEmailAddrCheckBox;
                     empItem.Items.Add(empEmailAddrItem);                    
@@ -421,7 +421,8 @@ namespace ProLogicReportingApplication
         }
         #endregion
 
-        #region Email Send
+
+        #region Send Bid Click
         /// <summary>
         /// Starts a background worker thread SendEmail
         ///  
@@ -434,16 +435,17 @@ namespace ProLogicReportingApplication
             {
                 BackgroundWorker emailSendWorker = new BackgroundWorker();
                 emailSendWorker.DoWork += SendEmail;
+                emailSendWorker.RunWorkerCompleted += PostToSyspro;
                 emailSendWorker.RunWorkerAsync();
-                //Encore.Utilities dll = new Encore.Utilities();
-                //dll.Logon("ADMIN", " ", "TEST [TEST FOR 360 SHEET METAL LLC]", " ", Encore.Language.ENGLISH, 0, 0, " ");                
             }
             catch (Exception es)
             {
                 Console.WriteLine(es.ToString());
             }
         }
+        #endregion
 
+        #region Email Send
         /// <summary>
         /// Send a email to a list of recipients
         /// </summary>
@@ -475,7 +477,15 @@ namespace ProLogicReportingApplication
             {
                 Console.WriteLine(ec.ToString());
             }
-        }        
+        }
+        #endregion
+
+        #region Post To Syspro
+        private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
+        {
+            //Encore.Utilities dll = new Encore.Utilities();
+            //dll.Logon("ADMIN", " ", "TEST [TEST FOR 360 SHEET METAL LLC]", " ", Encore.Language.ENGLISH, 0, 0, " ");    
+        }
         #endregion
     }
 }
