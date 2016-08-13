@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -22,7 +23,7 @@ namespace ProLogicReportingApplication
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window 
+    public partial class MainWindow : Window
     {        
         private List<string> proLogic_ContractContacts = new List<string>();        
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
@@ -32,16 +33,18 @@ namespace ProLogicReportingApplication
         private static string currentReport;
         private ReportDocument contractBidReportPreview = new ReportDocument();
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public MainWindow()
         {
-            InitializeComponent();           
+            InitializeComponent();            
             //string[] args = Environment.GetCommandLineArgs();
             //MessageBox.Show(args[1]);
             // pass args[1] to LoadContacts 
             // Call to Nucleus to get the data to populate the tree view            
             contractId = "00002";
             LoadContacts(contractId);
-        }
+        }       
 
         #region Load Contacts
         /// <summary>
@@ -62,7 +65,7 @@ namespace ProLogicReportingApplication
                 proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);
                 // Copies ProLogic_zContractContacts to an observable collection
                 // This is to be used for the treeview           
-                proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);                
+                proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
                 foreach (var item in proLogic_ContractContactsObservable)
                 {
                     if (item.Contains("{ Header = Item Level 0 }"))
@@ -81,7 +84,8 @@ namespace ProLogicReportingApplication
             
             return null;
         }
-        #endregion        
+        #endregion
+              
 
         /// <summary>
         /// This will handle Selected Item Changes
@@ -133,7 +137,7 @@ namespace ProLogicReportingApplication
                         CheckBox accountCheckBox = new CheckBox();
                         accountCheckBox.IsChecked = true;
                         accountCheckBox.IsEnabled = true;
-                        accountCheckBox.Focusable = true;                        
+                        accountCheckBox.Focusable = true;                                             
                         //accountCheckBox.IsThreeState = true;
                         accountCheckBox.Name = "ParentChkBox";
                         accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
@@ -285,12 +289,12 @@ namespace ProLogicReportingApplication
             if (checkedState == true)
             {
                 List<CheckBox> childCheckBoxList = new List<CheckBox>();
-                CheckBox chbox = new CheckBox();
+                CheckBox childsParentChkbox = new CheckBox();
                 CheckBox childsParentItem = item.Header as CheckBox;
                 foreach (TreeViewItem c in item.Items)
-                {                                      
-                    chbox = c.Header as CheckBox;                    
-                    childCheckBoxList.Add(chbox);
+                {
+                    childsParentChkbox = c.Header as CheckBox;                    
+                    childCheckBoxList.Add(childsParentChkbox);
                 }
                 if (childCheckBoxList.All(a => a.IsChecked == true))
                 {
@@ -307,12 +311,12 @@ namespace ProLogicReportingApplication
             else //checkedState == false
             {
                 List<CheckBox> childCheckBoxList = new List<CheckBox>();
-                CheckBox chbox = new CheckBox();
+                CheckBox childsParentChkbox = new CheckBox();
                 CheckBox childsParentItem = item.Header as CheckBox;
                 foreach (TreeViewItem c in item.Items)
-                {                
-                    chbox = c.Header as CheckBox;                        
-                    childCheckBoxList.Add(chbox);       
+                {
+                    childsParentChkbox = c.Header as CheckBox;                        
+                    childCheckBoxList.Add(childsParentChkbox);       
                 }
                 if (childCheckBoxList.Any(a => a.IsChecked == false))
                 {
@@ -474,7 +478,7 @@ namespace ProLogicReportingApplication
             try
             {
                 BackgroundWorker emailSendWorker = new BackgroundWorker();
-                emailSendWorker.DoWork += SendEmail;
+                emailSendWorker.DoWork += BidEmailRecipientList;
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
                 emailSendWorker.RunWorkerAsync();
             }
@@ -484,6 +488,18 @@ namespace ProLogicReportingApplication
             }
         }
         #endregion
+
+
+        #region Build Bid Email Recipient List
+        private void BidEmailRecipientList(object sender, DoWorkEventArgs e)
+        {
+            TreeView tv = sender as TreeView;
+            // This needs to call SendEmail passing it a List of Recipients
+        }
+
+
+        #endregion
+
 
         #region Email Send
         /// <summary>
