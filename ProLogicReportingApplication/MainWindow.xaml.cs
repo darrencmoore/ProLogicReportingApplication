@@ -478,7 +478,7 @@ namespace ProLogicReportingApplication
             try
             {
                 BackgroundWorker emailSendWorker = new BackgroundWorker();
-                emailSendWorker.DoWork += BidEmailRecipientList;
+                emailSendWorker.DoWork += SendEmail;
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
                 emailSendWorker.RunWorkerAsync();
             }
@@ -487,19 +487,7 @@ namespace ProLogicReportingApplication
                 MessageBox.Show(SendBindClickException.ToString());
             }
         }
-        #endregion
-
-
-        #region Build Bid Email Recipient List
-        private void BidEmailRecipientList(object sender, DoWorkEventArgs e)
-        {
-            TreeView tv = sender as TreeView;
-            // This needs to call SendEmail passing it a List of Recipients
-        }
-
-
-        #endregion
-
+        #endregion 
 
         #region Email Send
         /// <summary>
