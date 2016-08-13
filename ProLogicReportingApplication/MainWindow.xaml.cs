@@ -62,7 +62,7 @@ namespace ProLogicReportingApplication
                 proLogic_ContractContacts.AddRange(_agent.Agent_ContractContactsResponse);
                 // Copies ProLogic_zContractContacts to an observable collection
                 // This is to be used for the treeview           
-                proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);
+                proLogic_ContractContactsObservable = new ObservableCollection<string>(proLogic_ContractContacts);                
                 foreach (var item in proLogic_ContractContactsObservable)
                 {
                     if (item.Contains("{ Header = Item Level 0 }"))
@@ -91,6 +91,9 @@ namespace ProLogicReportingApplication
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Console.WriteLine("TreeView Collapsed");
+            TreeView view = sender as TreeView;
+            view.Items.Refresh();
+            view.UpdateLayout();
         }        
 
         #region TreeView Load 
@@ -125,16 +128,16 @@ namespace ProLogicReportingApplication
                         // Removing everything after the account ID for the Tag
                         accountItem.Tag = "{Parent} " + proLogic_ContractContactsObservable[i].Substring(0, proLogic_ContractContactsObservable[i].IndexOf("{"));
                         accountItemTag = accountItem.Tag.ToString().Replace(" ", string.Empty);
-                        accountItem.IsExpanded = false;
+                        accountItem.IsExpanded = true;
                         accountItem.FontWeight = FontWeights.Black;
                         CheckBox accountCheckBox = new CheckBox();
                         accountCheckBox.IsChecked = true;
                         accountCheckBox.IsEnabled = true;
-                        accountCheckBox.Focusable = true;
-                        accountCheckBox.IsThreeState = true;
+                        accountCheckBox.Focusable = true;                        
+                        //accountCheckBox.IsThreeState = true;
                         accountCheckBox.Name = "ParentChkBox";
                         accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
-                        accountCheckBox.Click += mouseClickHandler;
+                        accountCheckBox.Click += mouseClickHandler;                        
                         accountItem.Header = accountCheckBox;
                         tree.Items.Add(accountItem);
                     }
@@ -277,44 +280,50 @@ namespace ProLogicReportingApplication
         /// </summary>
         /// <param name="item"></param>
         /// <param name="checkedState"></param>
-        private void SetParentChecks(TreeViewItem item, bool checkedState)
+        private void SetParentChecks(TreeViewItem item, bool checkedState)  
         {
             if (checkedState == true)
             {
                 List<CheckBox> childCheckBoxList = new List<CheckBox>();
+                CheckBox chbox = new CheckBox();
+                CheckBox childsParentItem = item.Header as CheckBox;
                 foreach (TreeViewItem c in item.Items)
-                {
-                    CheckBox chbox = new CheckBox();                    
-                    chbox = c.Header as CheckBox;
+                {                                      
+                    chbox = c.Header as CheckBox;                    
                     childCheckBoxList.Add(chbox);
                 }
                 if (childCheckBoxList.All(a => a.IsChecked == true))
                 {
-                    CheckBox childsParentItem = item.Header as CheckBox;
                     childsParentItem.IsChecked = true;
                     childsParentItem.IsEnabled = true;
+                    childsParentItem.Focusable = true;                    
                 }
                 else
                 {
-                    CheckBox childsParentItem = item.Header as CheckBox;
                     childsParentItem.IsChecked = true;
-                    childsParentItem.IsEnabled = false;
-                }                
+                    childsParentItem.Focusable = true;
+                }
             }
             else //checkedState == false
             {
                 List<CheckBox> childCheckBoxList = new List<CheckBox>();
+                CheckBox chbox = new CheckBox();
+                CheckBox childsParentItem = item.Header as CheckBox;
                 foreach (TreeViewItem c in item.Items)
-                {
-                    CheckBox chbox = new CheckBox();                    
+                {                
                     chbox = c.Header as CheckBox;                        
                     childCheckBoxList.Add(chbox);       
                 }
                 if (childCheckBoxList.Any(a => a.IsChecked == false))
                 {
-                    CheckBox childsParentItem = item.Header as CheckBox;
                     childsParentItem.IsChecked = true;
-                    //childsParentItem.IsEnabled = false;
+                    childsParentItem.Focusable = true;
+                }
+                if(childCheckBoxList.All(a => a.IsChecked == false))
+                {
+                    childsParentItem.IsChecked = false;
+                    childsParentItem.IsEnabled = true;
+                    childsParentItem.Focusable = true;
                 }
             }
         }
@@ -517,6 +526,6 @@ namespace ProLogicReportingApplication
             Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.PostXmlForSyspro();
         }
-        #endregion
+        #endregion       
     }
 }
