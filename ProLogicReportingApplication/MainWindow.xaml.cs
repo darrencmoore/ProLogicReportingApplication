@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Mail;
 using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
+using System.Windows.Data;
 
 /// <summary>
 /// Created By Darren Moore
@@ -25,15 +26,16 @@ namespace ProLogicReportingApplication
     /// </summary>
     public partial class MainWindow : Window
     {        
-        private List<string> proLogic_ContractContacts = new List<string>();        
+        private List<string> proLogic_ContractContacts = new List<string>(); 
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
+        private List<string> proLogic_EmailRecipients = new List<string>();
         private static string contractId;
         private static string ReportCacheDir = @"C:\AgentReportCache\";
         private static string SmtpServer = "smtp.office365.com";
         private static string currentReport;
         private ReportDocument contractBidReportPreview = new ReportDocument();
+        private string emailRecipient;
 
-        public event PropertyChangedEventHandler PropertyChanged;
 
         public MainWindow()
         {
@@ -94,10 +96,7 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            Console.WriteLine("TreeView Collapsed");
-            TreeView view = sender as TreeView;
-            view.Items.Refresh();
-            view.UpdateLayout();
+            Console.WriteLine("TreeView Collapsed");            
         }        
 
         #region TreeView Load 
@@ -137,7 +136,7 @@ namespace ProLogicReportingApplication
                         CheckBox accountCheckBox = new CheckBox();
                         accountCheckBox.IsChecked = true;
                         accountCheckBox.IsEnabled = true;
-                        accountCheckBox.Focusable = true;                                             
+                        accountCheckBox.Focusable = true;                                                                   
                         //accountCheckBox.IsThreeState = true;
                         accountCheckBox.Name = "ParentChkBox";
                         accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
@@ -157,7 +156,7 @@ namespace ProLogicReportingApplication
                         empItemCheckBox.IsChecked = true;
                         empItemCheckBox.IsEnabled = true;
                         empItemCheckBox.Focusable = true;
-                        empItemCheckBox.Name = "ChildChkBox";
+                        empItemCheckBox.Name = "ChildChkBox";                       
                         empItemCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 1 }", "");
                         empItemCheckBox.Click += mouseClickHandler;
                         empItem.Header = empItemCheckBox;
@@ -184,12 +183,12 @@ namespace ProLogicReportingApplication
                 MessageBox.Show(trvAccount_AccountContactsLoadedException.ToString());
             }                                
         }
-        #endregion
-
+        #endregion        
+         
         #region Mouse Click Handler
         private void mouseClickHandler(object sender, EventArgs e)
         {
-            NodeCheck(sender as DependencyObject);           
+            NodeCheck(sender as DependencyObject);            
         }
         #endregion
         
@@ -295,6 +294,20 @@ namespace ProLogicReportingApplication
                 {
                     childsParentChkbox = c.Header as CheckBox;                    
                     childCheckBoxList.Add(childsParentChkbox);
+                    TreeViewItem emailAddress = c.ItemContainerGenerator.Items[0] as TreeViewItem;
+                    emailRecipient = emailAddress.Header.ToString();
+                    if (emailRecipient.Contains("IsChecked:True"))
+                    {
+                        BackgroundWorker worker = new BackgroundWorker();
+                        worker.DoWork += RemoveEmailRecipient;
+                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                    }
+                    if (emailRecipient.Contains("IsChecked:False"))
+                    {
+                        BackgroundWorker worker = new BackgroundWorker();
+                        worker.DoWork += AddEmailRecipient;
+                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                    }
                 }
                 if (childCheckBoxList.All(a => a.IsChecked == true))
                 {
@@ -315,8 +328,23 @@ namespace ProLogicReportingApplication
                 CheckBox childsParentItem = item.Header as CheckBox;
                 foreach (TreeViewItem c in item.Items)
                 {
-                    childsParentChkbox = c.Header as CheckBox;                        
-                    childCheckBoxList.Add(childsParentChkbox);       
+                    childsParentChkbox = c.Header as CheckBox;
+                    childCheckBoxList.Add(childsParentChkbox);
+                    TreeViewItem emailAddress = c.ItemContainerGenerator.Items[0] as TreeViewItem;
+                    emailRecipient = emailAddress.Header.ToString();
+                    if(emailRecipient.Contains("IsChecked:True"))
+                    {
+                        BackgroundWorker worker = new BackgroundWorker();
+                        worker.DoWork += RemoveEmailRecipient;
+                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                    }
+                    if (emailRecipient.Contains("IsChecked:False"))
+                    {
+                        BackgroundWorker worker = new BackgroundWorker();
+                        worker.DoWork += AddEmailRecipient;
+                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                    }
+                           
                 }
                 if (childCheckBoxList.Any(a => a.IsChecked == false))
                 {
@@ -339,26 +367,52 @@ namespace ProLogicReportingApplication
         /// <param name="checkedState"></param>
         private void SetChildrenChecks(TreeViewItem item, bool checkedState)
         {
-            foreach(TreeViewItem tv in item.Items)
+            
+            foreach (TreeViewItem tv in item.Items)
             {
                 CheckBox parentHasChildItem = tv.Header as CheckBox;
                 if (checkedState == true)
                 {
-                    Console.WriteLine("SetChildrenChecks STATE -> " + checkedState.ToString());
+                    if(tv.ItemContainerGenerator.Items.Count > 0)
+                    {
+                        TreeViewItem emailAddress = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
+                        emailRecipient = emailAddress.Header.ToString();
+                        BackgroundWorker worker = new BackgroundWorker();
+                        worker.DoWork += AddEmailRecipient;
+                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                    }                    
                     parentHasChildItem.IsChecked = true;
                 }
-                else if(checkedState == false)
-                {
-                    parentHasChildItem.IsChecked = false;
-                }                
                 else
                 {
-                    Console.WriteLine("SetChildrenChecks STATE -> " + checkedState.ToString());
-                    parentHasChildItem.IsChecked = true;
-                    parentHasChildItem.IsEnabled = false;
-                }               
+                    if(tv.ItemContainerGenerator.Items.Count > 0)
+                    {
+                        TreeViewItem emailAddress = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
+                        emailRecipient = emailAddress.Header.ToString();
+                        BackgroundWorker worker = new BackgroundWorker();
+                        worker.DoWork += RemoveEmailRecipient;
+                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                    }                    
+                    parentHasChildItem.IsChecked = false;
+                }                            
             }
-        }        
+        }
+
+        private void AddEmailRecipient(object sender, DoWorkEventArgs e)
+        {
+            if (!proLogic_EmailRecipients.Any(s => s.Equals(e.Argument)))
+            {
+                proLogic_EmailRecipients.Add(e.Argument.ToString());
+            }
+        }
+
+        private void RemoveEmailRecipient(object sender, DoWorkEventArgs e)
+        {
+            if(proLogic_EmailRecipients.Any(s => s.Equals(e.Argument)))
+            {
+                proLogic_EmailRecipients.Remove(e.Argument.ToString());
+            }
+        }
         #endregion
 
         #region Agent Report Cache BackgroundWorker
