@@ -32,7 +32,6 @@ namespace ProLogicReportingApplication
         private static string contractId;
         private static string ReportCacheDir = @"C:\AgentReportCache\";
         private static string SmtpServer = "smtp.office365.com";
-        private static string currentReport;
         private ReportDocument contractBidReportPreview = new ReportDocument();
         private string emailRecipient;
 
@@ -136,8 +135,7 @@ namespace ProLogicReportingApplication
                         CheckBox accountCheckBox = new CheckBox();
                         accountCheckBox.IsChecked = true;
                         accountCheckBox.IsEnabled = true;
-                        accountCheckBox.Focusable = true;                                                                   
-                        //accountCheckBox.IsThreeState = true;
+                        accountCheckBox.Focusable = true;
                         accountCheckBox.Name = "ParentChkBox";
                         accountCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 0 }", "");
                         accountCheckBox.Click += mouseClickHandler;                        
@@ -171,10 +169,11 @@ namespace ProLogicReportingApplication
                         CheckBox empEmailAddrCheckBox = new CheckBox();
                         empEmailAddrCheckBox.IsChecked = true;
                         empEmailAddrCheckBox.IsEnabled = false;
-                        empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "");
+                        empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "");                        
                         empEmailAddrCheckBox.Click += mouseClickHandler;
                         empEmailAddrItem.Header = empEmailAddrCheckBox;
                         empItem.Items.Add(empEmailAddrItem);
+                        proLogic_EmailRecipients.Add(empEmailAddrCheckBox.Content.ToString().Trim() + "_" + accountItemTag.Replace("{Parent}","").Trim());
                     }
                 }
             }
@@ -224,20 +223,13 @@ namespace ProLogicReportingApplication
                         if (parentTreeItemContentPresenter != null && parentTreeItemChkBox.Name.ToString() == "ParentChkBox")
                         {
                             if (parentTreeItemChkBox.IsChecked == true)
-                            {
-                                //Console.WriteLine("Parent Check Box Checked  -> " + parentTreeItemChkBox);
-                                Console.WriteLine("LIst Count" + proLogic_ContractContactsObservable.Count());
+                            {                               
                                 SetChildrenChecks(item, true);                                    
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));                                
                             }
-                            else if (parentTreeItemChkBox.IsChecked == false)
+                            else
                             {
-                                Console.WriteLine("Parent Check Box is Unchecked -> " + parentTreeItemChkBox);
                                 SetChildrenChecks(item, false);
-                                ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));
-                            }
-                            else if (parentTreeItemChkBox.IsChecked == null)
-                            {
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Parent}", "").Trim().Replace(" ", string.Empty));
                             }
                         }
@@ -251,16 +243,12 @@ namespace ProLogicReportingApplication
                         if (childTreeItemContentPresenter != null && childTreeItemChkBox.Name.ToString() == "ChildChkBox")
                         {
                             if (childTreeItemChkBox.IsChecked == true)
-                            {
-                                Console.WriteLine("Child Check Box Checked  -> " + childTreeItemChkBox);
-                                Console.WriteLine("Parent -> " + item.Parent.ToString());                                
+                            {                                                           
                                 SetParentChecks((TreeViewItem)item.Parent, true);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
                             else if (childTreeItemChkBox.IsChecked == false)
                             {
-                                Console.WriteLine("Child Check Box is Unchecked -> " + childTreeItemChkBox);
-                                Console.WriteLine("Parent -> " + item.Parent.ToString());
                                 SetParentChecks((TreeViewItem)item.Parent, false);
                                 ContractBidReportPreview(contractId, item.Tag.ToString().Replace("{Child}", "").Trim());
                             }
@@ -292,28 +280,21 @@ namespace ProLogicReportingApplication
                 CheckBox childsParentItem = item.Header as CheckBox;
                 foreach (TreeViewItem c in item.Items)
                 {
-                    childsParentChkbox = c.Header as CheckBox;                    
-                    childCheckBoxList.Add(childsParentChkbox);
-                    TreeViewItem emailAddress = c.ItemContainerGenerator.Items[0] as TreeViewItem;
-                    emailRecipient = emailAddress.Header.ToString();
-                    if (emailRecipient.Contains("IsChecked:True"))
-                    {
-                        BackgroundWorker worker = new BackgroundWorker();
-                        worker.DoWork += RemoveEmailRecipient;
-                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
-                    }
-                    if (emailRecipient.Contains("IsChecked:False"))
-                    {
-                        BackgroundWorker worker = new BackgroundWorker();
-                        worker.DoWork += AddEmailRecipient;
-                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
-                    }
+                    childsParentChkbox = c.Header as CheckBox;
+                    childCheckBoxList.Add(childsParentChkbox);                    
                 }
+
+                TreeViewItem _emailAddress = item;
+                TreeViewItem emailAddress = _emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
+                TreeViewItem _emailRecipient = emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
+                emailRecipient = _emailRecipient.Header.ToString();
+                AddEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+
                 if (childCheckBoxList.All(a => a.IsChecked == true))
                 {
                     childsParentItem.IsChecked = true;
                     childsParentItem.IsEnabled = true;
-                    childsParentItem.Focusable = true;                    
+                    childsParentItem.Focusable = true;
                 }
                 else
                 {
@@ -330,22 +311,14 @@ namespace ProLogicReportingApplication
                 {
                     childsParentChkbox = c.Header as CheckBox;
                     childCheckBoxList.Add(childsParentChkbox);
-                    TreeViewItem emailAddress = c.ItemContainerGenerator.Items[0] as TreeViewItem;
-                    emailRecipient = emailAddress.Header.ToString();
-                    if(emailRecipient.Contains("IsChecked:True"))
-                    {
-                        BackgroundWorker worker = new BackgroundWorker();
-                        worker.DoWork += RemoveEmailRecipient;
-                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
-                    }
-                    if (emailRecipient.Contains("IsChecked:False"))
-                    {
-                        BackgroundWorker worker = new BackgroundWorker();
-                        worker.DoWork += AddEmailRecipient;
-                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
-                    }
-                           
                 }
+
+                TreeViewItem _emailAddress = item;
+                TreeViewItem emailAddress = _emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
+                TreeViewItem _emailRecipient = emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
+                emailRecipient = _emailRecipient.Header.ToString();
+                RemoveEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+
                 if (childCheckBoxList.Any(a => a.IsChecked == false))
                 {
                     childsParentItem.IsChecked = true;
@@ -377,9 +350,7 @@ namespace ProLogicReportingApplication
                     {
                         TreeViewItem emailAddress = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
                         emailRecipient = emailAddress.Header.ToString();
-                        BackgroundWorker worker = new BackgroundWorker();
-                        worker.DoWork += AddEmailRecipient;
-                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                        AddEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());                        
                     }                    
                     parentHasChildItem.IsChecked = true;
                 }
@@ -389,28 +360,33 @@ namespace ProLogicReportingApplication
                     {
                         TreeViewItem emailAddress = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
                         emailRecipient = emailAddress.Header.ToString();
-                        BackgroundWorker worker = new BackgroundWorker();
-                        worker.DoWork += RemoveEmailRecipient;
-                        worker.RunWorkerAsync(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                        RemoveEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());                       
                     }                    
                     parentHasChildItem.IsChecked = false;
                 }                            
             }
         }
+        #endregion
 
-        private void AddEmailRecipient(object sender, DoWorkEventArgs e)
-        {
-            if (!proLogic_EmailRecipients.Any(s => s.Equals(e.Argument)))
-            {
-                proLogic_EmailRecipients.Add(e.Argument.ToString());
-            }
+        #region Add/Remove Email Recipients
+        /// <summary>
+        /// Adds recipients to email list
+        /// </summary>
+        /// <param name="emailAddress"></param>
+        private void AddEmailRecipient(string emailAddress)
+        {            
+             proLogic_EmailRecipients.Add(emailAddress);            
         }
 
-        private void RemoveEmailRecipient(object sender, DoWorkEventArgs e)
+        /// <summary>
+        /// Removes recipients from the email list
+        /// </summary>
+        /// <param name="emailAddress"></param>
+        private void RemoveEmailRecipient(string emailAddress)
         {
-            if(proLogic_EmailRecipients.Any(s => s.Equals(e.Argument)))
+            if(proLogic_EmailRecipients.Any(s => s.Equals(emailAddress)))
             {
-                proLogic_EmailRecipients.Remove(e.Argument.ToString());
+                proLogic_EmailRecipients.Remove(emailAddress);                
             }
         }
         #endregion
@@ -492,8 +468,7 @@ namespace ProLogicReportingApplication
                 var cachedReportFile = Directory.GetFiles(ReportCacheDir, contractId + accountId + ".rpt");
                 if(cachedReportFile != null)
                 {                    
-                    string path = (ReportCacheDir + contractId + accountId + ".rpt");
-                    currentReport = ReportCacheDir + contractId + accountId + ".pdf";
+                    string path = (ReportCacheDir + contractId + accountId + ".rpt");;
                     contractBidReportPreview.Load(path);
                     bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
                 }
@@ -553,23 +528,29 @@ namespace ProLogicReportingApplication
         {
             try
             {
-                MailMessage msg = new MailMessage();
-                msg.Subject = "Testing Email";
-                msg.From = new MailAddress("darrenm@360sheetmetal.com");
-                msg.To.Add(new MailAddress("darrenm@360sheetmetal.com"));
-                msg.Body = "Email Sent from Bid Report Application";
-                Attachment bidProposal = new Attachment(currentReport);
-                bidProposal.Name = "Bid Proposal - Job Name: " + currentReport.Remove(0, 29);
-                msg.Attachments.Add(bidProposal);
+                for(int i = 0; i < proLogic_EmailRecipients.Count; i++)
+                {
+                    MailMessage msg = new MailMessage();
+                    msg.Subject = "Testing Email";
+                    msg.From = new MailAddress("darrenm@360sheetmetal.com");
+                    msg.To.Add(new MailAddress(proLogic_EmailRecipients[i].Substring(0, proLogic_EmailRecipients[i].IndexOf("_"))));
+                    string accountNum = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
+                    msg.Body = "Email Sent from Bid Report Application";
+                    string proposalToSend = ReportCacheDir + contractId + accountNum + ".pdf";
+                    Console.WriteLine(proposalToSend);
+                    Attachment bidProposal = new Attachment(proposalToSend);
+                    bidProposal.Name = "Bid Proposal - Job Name: " + accountNum.Remove(0,4);
+                    msg.Attachments.Add(bidProposal);
 
-                SmtpClient smtp = new SmtpClient(SmtpServer);
-                smtp.Port = 587;
-                smtp.EnableSsl = true;
-                smtp.UseDefaultCredentials = false;
-                smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
-                smtp.Send(msg);
-                MessageBox.Show("Mail Sent");
+                    SmtpClient smtp = new SmtpClient(SmtpServer);
+                    smtp.Port = 587;
+                    smtp.EnableSsl = true;
+                    smtp.UseDefaultCredentials = false;
+                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
+                    smtp.Send(msg);
+                    MessageBox.Show("Mail Sent");
+                }                
             }
             catch (Exception SendEmailException)
             {
