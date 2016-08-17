@@ -31,7 +31,7 @@ namespace ProLogicReportingApplication
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private List<string> proLogic_EmailRecipients = new List<string>();
         private static string contractId;
-        private static string ReportCacheDir = "C:\\AgentReportCache\\";
+        private static string ReportCacheDir = @"C:\AgentReportCache\";
         private static string SmtpServer = "smtp.office365.com";
         private ReportDocument contractBidReportPreview = new ReportDocument();
         private string emailRecipient;
@@ -539,7 +539,7 @@ namespace ProLogicReportingApplication
                     msg.From = new MailAddress("darrenm@360sheetmetal.com");
                     msg.To.Add(new MailAddress(proLogic_EmailRecipients[i].Substring(0, proLogic_EmailRecipients[i].IndexOf("_"))));                    
                     msg.Body = "Email Sent from Bid Report Application";                    
-                    Attachment bidProposal = new Attachment( @"C:\AgentReportCache\" + contractId + accountNum + ".pdf", MediaTypeNames.Application.Pdf);
+                    Attachment bidProposal = new Attachment(ReportCacheDir + contractId + accountNum + ".pdf");
                     bidProposal.Name = "Bid Proposal - Job Name: " + accountNum.Remove(0, 4) + ".pdf";
                     msg.Attachments.Add(bidProposal);
 
