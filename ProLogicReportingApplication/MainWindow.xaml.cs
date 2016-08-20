@@ -33,6 +33,8 @@ namespace ProLogicReportingApplication
         private List<string> proLogic_ContractContacts = new List<string>();        
         private List<string> proLogic_EmailRecipients = new List<string>();        
         private string emailRecipient;
+        private string accountNum;
+        private string proposalToSend;
 
 
         public MainWindow()
@@ -551,8 +553,8 @@ namespace ProLogicReportingApplication
             {
                 for(int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {
-                    string accountNum = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
-                    string proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNum;
+                    accountNum = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
+                    proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNum;
 
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
