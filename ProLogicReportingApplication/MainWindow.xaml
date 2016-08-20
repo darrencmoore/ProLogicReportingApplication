@@ -7,7 +7,8 @@
         xmlns:my="clr-namespace:SAPBusinessObjects.WPF.Viewer;assembly=SAPBusinessObjects.WPF.Viewer"
         xmlns:local="clr-namespace:ProLogicReportingApplication"        
         mc:Ignorable="d"
-        Title="Bid Email Send" Height="1050" Width="1525">
+        Title="Bid Email Send" Height="1050" Width="1525"
+        Closing="ApplicationClosing">
 
     <Grid>
         <TreeView VirtualizingStackPanel.IsVirtualizing="true"  IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="600" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" SelectedItemChanged="trvTree_Collapsed" >            
