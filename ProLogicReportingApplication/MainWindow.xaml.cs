@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
@@ -12,8 +11,6 @@ using System.Net;
 using System.Net.Mail;
 using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
-using System.Windows.Data;
-using System.Net.Mime;
 
 /// <summary>
 /// Created By Darren Moore
@@ -26,27 +23,53 @@ namespace ProLogicReportingApplication
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
-    {        
-        private List<string> proLogic_ContractContacts = new List<string>(); 
-        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
-        private List<string> proLogic_EmailRecipients = new List<string>();
-        private static string contractId;
-        private static string ReportCacheDir = @"C:\AgentReportCache\";
+    {
+        private static string PATH_REPORTCACHEDIR = @"C:\AgentReportCache\";
         private static string SmtpServer = "smtp.office365.com";
+        private static string contractId;
+        private static string PATH_CONTRACTBIDREPORT = @"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt";
+        private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private ReportDocument contractBidReportPreview = new ReportDocument();
+        private List<string> proLogic_ContractContacts = new List<string>();        
+        private List<string> proLogic_EmailRecipients = new List<string>();        
         private string emailRecipient;
 
 
         public MainWindow()
         {
-            InitializeComponent();            
+            InitializeComponent();
+            BackgroundWorker _createReportCacheDirWorker = new BackgroundWorker();
+            _createReportCacheDirWorker.DoWork += CreateReportCacheDir;
+            _createReportCacheDirWorker.RunWorkerAsync();
+
             //string[] args = Environment.GetCommandLineArgs();
             //MessageBox.Show(args[1]);
             // pass args[1] to LoadContacts 
-            // Call to Nucleus to get the data to populate the tree view            
+            // Call to Nucleus to get the data to populate the tree view           
             contractId = "00002";
             LoadContacts(contractId);
-        }       
+        }
+
+        #region Create Cache Dir 
+        private void CreateReportCacheDir(object sender, DoWorkEventArgs e)
+        {
+            if(!Directory.Exists(PATH_REPORTCACHEDIR))
+            {
+                Directory.CreateDirectory(PATH_REPORTCACHEDIR);
+            }
+        }
+        #endregion
+
+        #region Delete Cache Dir Contents
+        private void ApplicationClosing(object sender, CancelEventArgs e)
+        {
+            DirectoryInfo cachedFiles = new DirectoryInfo(PATH_REPORTCACHEDIR);
+            foreach(FileInfo cachedFile in cachedFiles.GetFiles())
+            {
+                cachedFile.Delete();
+            }
+        }
+        #endregion      
 
         #region Load Contacts
         /// <summary>
@@ -97,7 +120,7 @@ namespace ProLogicReportingApplication
         private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             Console.WriteLine("TreeView Collapsed");            
-        }        
+        }
 
         #region TreeView Load 
         /// <summary>
@@ -108,6 +131,8 @@ namespace ProLogicReportingApplication
         /// This gets called from MainWindow.xaml when the TreeView is intially loaded
         /// As there is not a OnClick event for TreeView nor the TreeViewItems I had to use PreviewMouseLeftButtonDown
         /// changed from using ProLogiz_zContractContacts list to zContractsContactsObservable
+        /// Creating the email list on load of the contacts here.
+        /// This list gets altered based on user interaction with the treeview
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -442,12 +467,11 @@ namespace ProLogicReportingApplication
                 DataTable reportPreviewCacheTable = new DataTable();
                 reportPreviewCacheTable = _agent.ReportPreview(contractId, accountId.Remove(5).Trim());
                 ReportDocument contractBidReportPreviewCache = new ReportDocument();
-                var path = (@"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt");
-                contractBidReportPreviewCache.Load(path);
+                contractBidReportPreviewCache.Load(PATH_CONTRACTBIDREPORT);
                 contractBidReportPreviewCache.SetDataSource(reportPreviewCacheTable);
                 contractBidReportPreviewCache.Refresh();
-                contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".rpt");
-                contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, ReportCacheDir + contractId + accountId.Replace(" ", string.Empty) + ".pdf");
+                contractBidReportPreviewCache.ExportToDisk(ExportFormatType.CrystalReport, PATH_REPORTCACHEDIR + contractId + accountId.Replace(" ", string.Empty) + ".rpt");
+                contractBidReportPreviewCache.ExportToDisk(ExportFormatType.PortableDocFormat, PATH_REPORTCACHEDIR + contractId + accountId.Replace(" ", string.Empty) + ".pdf");
             }
             catch (Exception ContractBidReportCacheException)
             {
@@ -466,17 +490,13 @@ namespace ProLogicReportingApplication
         {
             try
             {                
-                var cachedReportFile = Directory.GetFiles(ReportCacheDir, contractId + accountId + ".rpt");
+                var cachedReportFile = Directory.GetFiles(PATH_REPORTCACHEDIR, contractId + accountId + ".rpt");
                 if(cachedReportFile != null)
                 {                    
-                    string path = (ReportCacheDir + contractId + accountId + ".rpt");
+                    string path = (PATH_REPORTCACHEDIR + contractId + accountId + ".rpt");
                     contractBidReportPreview.Load(path);
                     bidContractReportPreview.ViewerCore.ReportSource = contractBidReportPreview;
-                }
-                else
-                {
-                    //generate report here
-                }               
+                }           
             }
             catch (LogOnException ContractBidReportPreview_LogOnException)
             {
@@ -532,14 +552,14 @@ namespace ProLogicReportingApplication
                 for(int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {
                     string accountNum = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
-                    string proposalToSend = ReportCacheDir + contractId + accountNum;
+                    string proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNum;
 
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
                     msg.From = new MailAddress("darrenm@360sheetmetal.com");
                     msg.To.Add(new MailAddress(proLogic_EmailRecipients[i].Substring(0, proLogic_EmailRecipients[i].IndexOf("_"))));                    
                     msg.Body = "Email Sent from Bid Report Application";                    
-                    Attachment bidProposal = new Attachment(ReportCacheDir + contractId + accountNum + ".pdf");
+                    Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNum + ".pdf");
                     bidProposal.Name = "Bid Proposal - Job Name: " + accountNum.Remove(0, 4) + ".pdf";
                     msg.Attachments.Add(bidProposal);
 
@@ -566,6 +586,6 @@ namespace ProLogicReportingApplication
             Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.PostXmlForSyspro();
         }
-        #endregion       
+        #endregion        
     }
 }
