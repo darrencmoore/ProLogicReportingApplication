@@ -31,10 +31,15 @@ namespace ProLogicReportingApplication
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private ReportDocument contractBidReportPreview = new ReportDocument();
         private List<string> proLogic_ContractContacts = new List<string>();        
-        private List<string> proLogic_EmailRecipients = new List<string>();        
+        private List<string> proLogic_EmailRecipients = new List<string>();
+        private TreeViewItem accountItem = new TreeViewItem();
+        private TreeViewItem empItem = new TreeViewItem();
+        private TreeViewItem empEmailAddrItem = new TreeViewItem();
         private string emailRecipient;
         private string accountNum;
         private string proposalToSend;
+        private string accountItemTag;
+        private string empItemTag;
 
 
         public MainWindow()
@@ -128,13 +133,8 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
-        {
-            TreeViewItem accountItem = new TreeViewItem();
-            TreeViewItem empItem = new TreeViewItem();           
-            TreeViewItem empEmailAddrItem = new TreeViewItem();            
+        {        
             TreeView tree = sender as TreeView;
-            string accountItemTag = null;
-            string empItemTag = null;
 
             try
             {
@@ -395,7 +395,7 @@ namespace ProLogicReportingApplication
         /// <param name="emailAddress"></param>
         private void RemoveEmailRecipient(string emailAddress)
         {
-            if(proLogic_EmailRecipients.Any(s => s.Equals(emailAddress)))
+            if (proLogic_EmailRecipients.Any(s => s.Equals(emailAddress)))
             {
                 proLogic_EmailRecipients.Remove(emailAddress);                
             }
@@ -511,7 +511,7 @@ namespace ProLogicReportingApplication
         private void btn_SendBid_Click(object sender, RoutedEventArgs e)
         {
             try
-            {
+            {                
                 BackgroundWorker emailSendWorker = new BackgroundWorker();
                 emailSendWorker.DoWork += SendEmail;
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
@@ -521,6 +521,7 @@ namespace ProLogicReportingApplication
             {
                 MessageBox.Show(SendBindClickException.ToString());
             }
+           
         }
         #endregion 
 
@@ -531,10 +532,10 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void SendEmail(object sender, DoWorkEventArgs e)
-        {
+        {            
             try
-            {
-                for(int i = 0; i < proLogic_EmailRecipients.Count; i++)
+            {               
+                for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {
                     accountNum = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
                     proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNum;
@@ -562,12 +563,13 @@ namespace ProLogicReportingApplication
             {
                 MessageBox.Show(SendEmailException.ToString());
             }
+            
         }
         #endregion
 
         #region Post To Syspro
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
-        {
+        {         
             Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.PostXmlForSyspro();
         }
