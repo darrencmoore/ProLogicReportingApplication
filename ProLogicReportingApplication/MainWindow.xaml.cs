@@ -111,18 +111,7 @@ namespace ProLogicReportingApplication
             
             return null;
         }
-        #endregion
-              
-
-        /// <summary>
-        /// This will handle Selected Item Changes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void trvTree_Collapsed(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            Console.WriteLine("TreeView Collapsed");            
-        }
+        #endregion        
 
         #region TreeView Load 
         /// <summary>
@@ -217,13 +206,7 @@ namespace ProLogicReportingApplication
         {
             NodeCheck(sender as DependencyObject);            
         }
-        #endregion
-        
-        private void CoalesceTreeView(TreeViewItem node, Boolean isChecked)
-        {
-            //Console.WriteLine("CoalesceTreeView " + node.);
-            //Console.WriteLine("CoalesceTreeView " + node.ItemContainerGenerator.Items.ToString());
-        }
+        #endregion        
 
         #region Parent/Child Node Check
         /// <summary>
