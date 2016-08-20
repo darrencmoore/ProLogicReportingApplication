@@ -11,7 +11,7 @@
         Closing="ApplicationClosing">
 
     <Grid>
-        <TreeView VirtualizingStackPanel.IsVirtualizing="true"  IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="600" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" SelectedItemChanged="trvTree_Collapsed" >            
+        <TreeView VirtualizingStackPanel.IsVirtualizing="true"  IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="600" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" >            
             <TreeView.Resources>
                 <SolidColorBrush Color="LightBlue" x:Key="{x:Static SystemColors.HighlightBrushKey}"/>
             </TreeView.Resources>
