@@ -135,6 +135,7 @@ namespace ProLogicReportingApplication
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
         {        
             TreeView tree = sender as TreeView;
+            int empTracker = 0; 
 
             try
             {
@@ -180,8 +181,9 @@ namespace ProLogicReportingApplication
                     //Contact Email Address = Level 2
                     if (proLogic_ContractContactsObservable[i].Contains("{ Header = Item Level 2 }"))
                     {
+                        empTracker++;
                         empEmailAddrItem = new TreeViewItem();
-                        empEmailAddrItem.Tag = "{Email} " + proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "");
+                        empEmailAddrItem.Tag = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "").Trim() + "_" + accountItemTag.Replace("{Parent}", "").Trim() + "_" + empTracker;
                         empEmailAddrItem.FontWeight = FontWeights.Black;
                         CheckBox empEmailAddrCheckBox = new CheckBox();
                         empEmailAddrCheckBox.IsChecked = true;
@@ -189,8 +191,8 @@ namespace ProLogicReportingApplication
                         empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "");                        
                         empEmailAddrCheckBox.Click += mouseClickHandler;
                         empEmailAddrItem.Header = empEmailAddrCheckBox;
-                        empItem.Items.Add(empEmailAddrItem);
-                        proLogic_EmailRecipients.Add(empEmailAddrCheckBox.Content.ToString().Trim() + "_" + accountItemTag.Replace("{Parent}","").Trim());
+                        empItem.Items.Add(empEmailAddrItem);                        
+                        proLogic_EmailRecipients.Add(empEmailAddrCheckBox.Content.ToString().Trim() + "_" + accountItemTag.Replace("{Parent}","").Trim() + "_" + empTracker);
                     }
                 }
             }
@@ -298,8 +300,8 @@ namespace ProLogicReportingApplication
                 TreeViewItem _emailAddress = item;
                 TreeViewItem emailAddress = _emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
                 TreeViewItem _emailRecipient = emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
-                emailRecipient = _emailRecipient.Header.ToString();
-                AddEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                emailRecipient = _emailRecipient.Tag.ToString();
+                AddEmailRecipient(emailRecipient.Trim());
 
                 if (childCheckBoxList.All(a => a.IsChecked == true))
                 {
@@ -327,8 +329,8 @@ namespace ProLogicReportingApplication
                 TreeViewItem _emailAddress = item;
                 TreeViewItem emailAddress = _emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
                 TreeViewItem _emailRecipient = emailAddress.ItemContainerGenerator.Items[0] as TreeViewItem;
-                emailRecipient = _emailRecipient.Header.ToString();
-                RemoveEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());
+                emailRecipient = _emailRecipient.Tag.ToString();
+                RemoveEmailRecipient(emailRecipient.Trim());
 
                 if (childCheckBoxList.Any(a => a.IsChecked == false))
                 {
@@ -360,8 +362,8 @@ namespace ProLogicReportingApplication
                     if(tv.ItemContainerGenerator.Items.Count > 0)
                     {
                         TreeViewItem emailAddress = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
-                        emailRecipient = emailAddress.Header.ToString();
-                        AddEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());                        
+                        emailRecipient = emailAddress.Tag.ToString();
+                        AddEmailRecipient(emailRecipient.Trim());
                     }                    
                     parentHasChildItem.IsChecked = true;
                 }
@@ -370,8 +372,8 @@ namespace ProLogicReportingApplication
                     if(tv.ItemContainerGenerator.Items.Count > 0)
                     {
                         TreeViewItem emailAddress = tv.ItemContainerGenerator.Items[0] as TreeViewItem;
-                        emailRecipient = emailAddress.Header.ToString();
-                        RemoveEmailRecipient(emailRecipient.Remove(0, 42).Replace("IsChecked:True", "").Trim());                       
+                        emailRecipient = emailAddress.Tag.ToString();                       
+                        RemoveEmailRecipient(emailRecipient.Trim());
                     }                    
                     parentHasChildItem.IsChecked = false;
                 }                            
