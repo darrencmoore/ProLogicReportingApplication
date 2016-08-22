@@ -32,6 +32,7 @@ namespace ProLogicReportingApplication
         private ReportDocument contractBidReportPreview = new ReportDocument();
         private List<string> proLogic_ContractContacts = new List<string>();        
         private List<string> proLogic_EmailRecipients = new List<string>();
+        private List<string> proLogic_StartActivities = new List<string>();
         private TreeViewItem accountItem = new TreeViewItem();
         private TreeViewItem empItem = new TreeViewItem();
         private TreeViewItem empEmailAddrItem = new TreeViewItem();
@@ -183,16 +184,16 @@ namespace ProLogicReportingApplication
                     {
                         empTracker++;
                         empEmailAddrItem = new TreeViewItem();
-                        empEmailAddrItem.Tag = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "").Trim() + "_" + accountItemTag.Replace("{Parent}", "").Trim() + "_" + empTracker;
+                        empEmailAddrItem.Tag = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "").Trim() + "_" + accountItemTag.Replace("{Parent}", "").Trim(); //+ "_" + empTracker;
                         empEmailAddrItem.FontWeight = FontWeights.Black;
                         CheckBox empEmailAddrCheckBox = new CheckBox();
                         empEmailAddrCheckBox.IsChecked = true;
                         empEmailAddrCheckBox.IsEnabled = false;
-                        empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 2 }", "");                        
+                        empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 42).Replace("{ Header = Item Level 2 }", "");                        
                         empEmailAddrCheckBox.Click += mouseClickHandler;
                         empEmailAddrItem.Header = empEmailAddrCheckBox;
                         empItem.Items.Add(empEmailAddrItem);                        
-                        proLogic_EmailRecipients.Add(empEmailAddrCheckBox.Content.ToString().Trim() + "_" + accountItemTag.Replace("{Parent}","").Trim() + "_" + empTracker);
+                        proLogic_EmailRecipients.Add(empEmailAddrItem.Tag.ToString());
                     }
                 }
             }
@@ -534,7 +535,10 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void SendEmail(object sender, DoWorkEventArgs e)
-        {            
+        {
+            string to;
+            string _startActivity;
+
             try
             {               
                 for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
@@ -545,7 +549,8 @@ namespace ProLogicReportingApplication
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
                     msg.From = new MailAddress("darrenm@360sheetmetal.com");
-                    msg.To.Add(new MailAddress(proLogic_EmailRecipients[i].Substring(0, proLogic_EmailRecipients[i].IndexOf("_"))));                    
+                    to = proLogic_EmailRecipients[i].Remove(0, 42);
+                    msg.To.Add(new MailAddress(to.Substring(0, to.LastIndexOf("_"))));                    
                     msg.Body = "Email Sent from Bid Report Application";                    
                     Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNum + ".pdf");
                     bidProposal.Name = "Bid Proposal - Job Name: " + accountNum.Remove(0, 4) + ".pdf";
@@ -559,6 +564,9 @@ namespace ProLogicReportingApplication
                     smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
                     smtp.Send(msg);
                     MessageBox.Show("Mail Sent");
+
+                    _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
+                    proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
                 }                
             }
             catch (Exception SendEmailException)
@@ -573,7 +581,7 @@ namespace ProLogicReportingApplication
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
         {         
             Nucleus.Agent _agent = new Nucleus.Agent();
-            _agent.PostXmlForSyspro();
+            _agent.PostXmlForSyspro(proLogic_StartActivities);
         }
         #endregion        
     }
