@@ -37,7 +37,7 @@ namespace ProLogicReportingApplication
         private TreeViewItem empItem = new TreeViewItem();
         private TreeViewItem empEmailAddrItem = new TreeViewItem();
         private string emailRecipient;
-        private string accountNum;
+        private string accountNumAndName;
         private string proposalToSend;
         private string accountItemTag;
         private string empItemTag;
@@ -536,24 +536,24 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         private void SendEmail(object sender, DoWorkEventArgs e)
         {
-            string to;
+            string _to;
             string _startActivity;
 
             try
             {               
                 for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {
-                    accountNum = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
-                    proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNum;
+                    accountNumAndName = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
+                    proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNumAndName;
 
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
-                    msg.From = new MailAddress("darrenm@360sheetmetal.com");
-                    to = proLogic_EmailRecipients[i].Remove(0, 42);
-                    msg.To.Add(new MailAddress(to.Substring(0, to.LastIndexOf("_"))));                    
+                    msg.From = new MailAddress("bob@360sheetmetal.com");
+                    _to = proLogic_EmailRecipients[i].Remove(0, 42);
+                    msg.To.Add(new MailAddress(_to.Substring(0, _to.LastIndexOf("_"))));                    
                     msg.Body = "Email Sent from Bid Report Application";                    
-                    Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNum + ".pdf");
-                    bidProposal.Name = "Bid Proposal - Job Name: " + accountNum.Remove(0, 4) + ".pdf";
+                    Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNumAndName + ".pdf");
+                    bidProposal.Name = "Bid Proposal - Job Name: " + accountNumAndName.Remove(0, 4) + ".pdf";
                     msg.Attachments.Add(bidProposal);
 
                     SmtpClient smtp = new SmtpClient(SmtpServer);
