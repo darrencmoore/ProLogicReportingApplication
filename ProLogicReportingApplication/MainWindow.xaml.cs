@@ -33,6 +33,8 @@ namespace ProLogicReportingApplication
         private List<string> proLogic_ContractContacts = new List<string>();        
         private List<string> proLogic_EmailRecipients = new List<string>();
         private List<string> proLogic_StartActivities = new List<string>();
+        private List<Guid> proLogic_ActivityGuids = new List<Guid>();
+        private List<Attachment> proLogic_SentProposal = new List<Attachment>();
         private TreeViewItem accountItem = new TreeViewItem();
         private TreeViewItem empItem = new TreeViewItem();
         private TreeViewItem empEmailAddrItem = new TreeViewItem();
@@ -567,6 +569,7 @@ namespace ProLogicReportingApplication
 
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
+                    proLogic_SentProposal.Add(bidProposal);
                 }                
             }
             catch (Exception SendEmailException)
@@ -581,7 +584,8 @@ namespace ProLogicReportingApplication
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
         {         
             Nucleus.Agent _agent = new Nucleus.Agent();
-            _agent.PostXmlForSyspro(proLogic_StartActivities);
+            proLogic_ActivityGuids = proLogic_StartActivities.ConvertAll<Guid>(x => new Guid(x));
+            _agent.PostXmlForSyspro(proLogic_ActivityGuids, proLogic_SentProposal);
         }
         #endregion        
     }
