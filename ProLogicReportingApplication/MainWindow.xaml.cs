@@ -45,8 +45,7 @@ namespace ProLogicReportingApplication
         private string accountNumAndName;
         private string accountItemTag;
         private string empItemTag;
-        private AutoResetEvent are = new AutoResetEvent(false);
-
+        
 
         public MainWindow()
         {
