@@ -12,6 +12,7 @@ using System.Net.Mail;
 using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
 using System.Media;
+using System.Threading;
 
 /// <summary>
 /// Created By Darren Moore
@@ -29,6 +30,7 @@ namespace ProLogicReportingApplication
         private static string SmtpServer = "smtp.office365.com";
         private static string contractId;
         private static string PATH_CONTRACTBIDREPORT = @"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt";
+        private static BackgroundWorker emailSendWorker = new BackgroundWorker();
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private ReportDocument contractBidReportPreview = new ReportDocument();
         private List<string> proLogic_ContractContacts = new List<string>();        
@@ -43,11 +45,12 @@ namespace ProLogicReportingApplication
         private string accountNumAndName;
         private string accountItemTag;
         private string empItemTag;
+        private AutoResetEvent are = new AutoResetEvent(false);
 
 
         public MainWindow()
         {
-            InitializeComponent();
+            InitializeComponent();            
             BackgroundWorker _createReportCacheDirWorker = new BackgroundWorker();
             _createReportCacheDirWorker.DoWork += CreateReportCacheDir;
             _createReportCacheDirWorker.RunWorkerAsync();
@@ -60,10 +63,17 @@ namespace ProLogicReportingApplication
             LoadContacts(contractId);
         }
 
-        #region Create Cache Dir 
+        #region Create Cache Dir
+        /// <summary>
+        /// This method creates the Directory to store generated reports 
+        /// if it doesn't exist
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void CreateReportCacheDir(object sender, DoWorkEventArgs e)
         {
-            if(!Directory.Exists(PATH_REPORTCACHEDIR))
+            
+            if (!Directory.Exists(PATH_REPORTCACHEDIR))
             {
                 Directory.CreateDirectory(PATH_REPORTCACHEDIR);
             }
@@ -71,6 +81,12 @@ namespace ProLogicReportingApplication
         #endregion
 
         #region Delete Cache Dir Contents
+        /// <summary>
+        /// This method removes all the generated reports from 
+        /// C:\AgentReportCache\ on closing 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ApplicationClosing(object sender, CancelEventArgs e)
         {
             DirectoryInfo cachedFiles = new DirectoryInfo(PATH_REPORTCACHEDIR);
@@ -92,7 +108,7 @@ namespace ProLogicReportingApplication
         public string LoadContacts(string contractId)
         { 
             try
-            {
+            {               
                 List<KeyValuePair<string, string>> ToBeCachedReports = new List<KeyValuePair<string, string>>();
                 Nucleus.Agent _agent = new Nucleus.Agent();
                 _agent.GetContacts(contractId);
@@ -141,7 +157,7 @@ namespace ProLogicReportingApplication
             int empTracker = 0; 
 
             try
-            {
+            {                
                 for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
                 {
                     //AccountName = Level 0                       
@@ -204,9 +220,14 @@ namespace ProLogicReportingApplication
                 MessageBox.Show(trvAccount_AccountContactsLoadedException.ToString());
             }                                
         }
-        #endregion        
-         
+        #endregion
+
         #region Mouse Click Handler
+        /// <summary>
+        /// The Handler for the treeview Checkbox clicks
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void mouseClickHandler(object sender, EventArgs e)
         {
             NodeCheck(sender as DependencyObject);            
@@ -416,15 +437,22 @@ namespace ProLogicReportingApplication
         {
             try
             {
+                WorkingSpinner.Visibility = Visibility.Visible;
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.DoWork += reportPreviewCacheWorker;
-                //worker.RunWorkerCompleted += startGarbageCollector;
+                worker.RunWorkerCompleted += removeWorkingSpinner;
                 worker.RunWorkerAsync(reportsReadyForCache);
             }
             catch (Exception AgentReportCacheWorkerExeption)
             {
                 MessageBox.Show(AgentReportCacheWorkerExeption.ToString());
             }            
+        }
+
+
+        private void removeWorkingSpinner(object sender, RunWorkerCompletedEventArgs e)
+        {
+            WorkingSpinner.Visibility = Visibility.Hidden;
         }
 
         /// <summary>
@@ -516,19 +544,18 @@ namespace ProLogicReportingApplication
         private void btn_SendBid_Click(object sender, RoutedEventArgs e)
         {
             try
-            {                
-                BackgroundWorker emailSendWorker = new BackgroundWorker();
+            {
+                WorkingSpinner.Visibility = Visibility.Visible;
                 emailSendWorker.DoWork += SendEmail;
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
-                emailSendWorker.RunWorkerAsync();
+                emailSendWorker.RunWorkerAsync();                
             }
             catch (Exception SendBindClickException)
             {
                 MessageBox.Show(SendBindClickException.ToString());
-            }
-           
+            }           
         }
-        #endregion 
+        #endregion       
 
         #region Email Send
         /// <summary>
@@ -542,9 +569,9 @@ namespace ProLogicReportingApplication
             string _startActivity;
 
             try
-            {               
+            {                
                 for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
-                {
+                {                    
                     accountNumAndName = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
 
                     MailMessage msg = new MailMessage();
@@ -569,19 +596,26 @@ namespace ProLogicReportingApplication
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
                     proLogic_SentProposal.Add(bidProposal);
-                }                
+                }
             }
             catch (Exception SendEmailException)
             {
                 MessageBox.Show(SendEmailException.ToString());
-            }
-            
+            }            
         }
         #endregion
 
         #region Post To Syspro
+        /// <summary>
+        /// Removes the working spinner
+        /// passes the proLogic_ActivityGuids and proLogic_SentProposal to Nuclues.Agent
+        /// for XML String Building
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
-        {         
+        {      
+            WorkingSpinner.Visibility = Visibility.Hidden;
             Nucleus.Agent _agent = new Nucleus.Agent();
             proLogic_ActivityGuids = proLogic_StartActivities.ConvertAll<Guid>(x => new Guid(x));
             _agent.PostXmlForSyspro(proLogic_ActivityGuids, proLogic_SentProposal);

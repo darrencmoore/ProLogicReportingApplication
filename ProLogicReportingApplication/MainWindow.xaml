@@ -1,6 +1,7 @@
 ﻿<Window x:Class="ProLogicReportingApplication.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:wpfTool="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
@@ -10,7 +11,7 @@
         Title="Bid Email Send" Height="1050" Width="1525"
         Closing="ApplicationClosing">
 
-    <Grid>
+    <Grid x:Name="MainGrid">
         <TreeView VirtualizingStackPanel.IsVirtualizing="true"  IsEnabled="True" x:Name="trvAccount_AccountContacts" HorizontalAlignment="Left" Height="600" Margin="18,10,0,0" VerticalAlignment="Top" Width="300" Loaded="trvAccount_AccountContactsLoaded" >            
             <TreeView.Resources>
                 <SolidColorBrush Color="LightBlue" x:Key="{x:Static SystemColors.HighlightBrushKey}"/>
@@ -21,5 +22,7 @@
     
         <Button x:Name="btn_SendBid" Content="Send" HorizontalAlignment="Left" Margin="1432,0,0,0" VerticalAlignment="Top" Width="75" Click="btn_SendBid_Click"/>
         <!--<Button x:Name="Select" Content="Select" HorizontalAlignment="Left" Margin="307,145,0,0" VerticalAlignment="Top" Width="75" Click="Select_Click"/>-->
+
+        <fa:ImageAwesome x:Name="WorkingSpinner" Icon="Spinner" Spin="True" Height="100" Width="100" Visibility="Hidden" />
     </Grid>
 </Window>
