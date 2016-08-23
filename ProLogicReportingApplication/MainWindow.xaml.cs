@@ -11,6 +11,7 @@ using System.Net;
 using System.Net.Mail;
 using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
+using System.Media;
 
 /// <summary>
 /// Created By Darren Moore
@@ -40,7 +41,6 @@ namespace ProLogicReportingApplication
         private TreeViewItem empEmailAddrItem = new TreeViewItem();
         private string emailRecipient;
         private string accountNumAndName;
-        private string proposalToSend;
         private string accountItemTag;
         private string empItemTag;
 
@@ -546,7 +546,6 @@ namespace ProLogicReportingApplication
                 for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {
                     accountNumAndName = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
-                    proposalToSend = PATH_REPORTCACHEDIR + contractId + accountNumAndName;
 
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
@@ -565,7 +564,7 @@ namespace ProLogicReportingApplication
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                     smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
                     smtp.Send(msg);
-                    MessageBox.Show("Mail Sent");
+                    SystemSounds.Exclamation.Play();
 
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
