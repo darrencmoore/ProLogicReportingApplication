@@ -63,7 +63,7 @@ namespace ProLogicReportingApplication
             LoadContacts(contractId);
         }
 
-        #region Handlers for UI during Regport Gen and Emailing
+        #region Handlers for UI during Report Gen and Emailing
         /// <summary>
         /// Handler for Mouse Down during report gen
         /// </summary>
@@ -662,7 +662,7 @@ namespace ProLogicReportingApplication
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
                     proLogic_SentProposal.Add(bidProposal);
-                }
+                }                
             }
             catch (Exception SendEmailException)
             {
@@ -682,6 +682,7 @@ namespace ProLogicReportingApplication
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
         {
             WorkingSpinner.Visibility = Visibility.Hidden;
+            MessageBox.Show("Emails Sent Successfully");
             MainGrid.MouseLeftButtonDown -= MouseDownDuringEmailSend;
             MainGrid.MouseLeftButtonUp -= MouseUpDuringEmailSend;
             trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= MouseDownDuringEmailSend;
