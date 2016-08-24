@@ -64,22 +64,42 @@ namespace ProLogicReportingApplication
         }
 
         #region Handlers for UI during Regport Gen and Emailing
-        private void keyDownDuringReportGen(object sender, MouseEventArgs e)
+        /// <summary>
+        /// Handler for Mouse Down during report gen
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseDownDuringReportGen(object sender, MouseEventArgs e)
         {
             MessageBox.Show("Billing Application is generating reports please wait.");
         }
 
-        private void keyUpDuringReportGen(object sender, MouseEventArgs e)
+        /// <summary>
+        /// Handler for Mouse Up during report gen
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseUpDuringReportGen(object sender, MouseEventArgs e)
         {
             MessageBox.Show("Billing Application is generating reports please wait.");
         }
 
-        private void keyDownDuringEmailSend(object sender, MouseEventArgs e)
+        /// <summary>
+        /// Handler for Mouse Down during Emailing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseDownDuringEmailSend(object sender, MouseEventArgs e)
         {
             MessageBox.Show("Billing Application is emailing proposals please wait.");
         }
 
-        private void keyUpDuringEmailSend(object sender, MouseEventArgs e)
+        /// <summary>
+        /// Handler for Mouse Up during Emailing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void MouseUpDuringEmailSend(object sender, MouseEventArgs e)
         {
             MessageBox.Show("Billing Application is emailing proposals please wait.");
         }
@@ -462,10 +482,10 @@ namespace ProLogicReportingApplication
             try
             {
                 WorkingSpinner.Visibility = Visibility.Visible;
-                MainGrid.MouseLeftButtonDown += keyDownDuringReportGen;
-                MainGrid.MouseLeftButtonUp += keyUpDuringReportGen;
-                trvAccount_AccountContacts.PreviewMouseLeftButtonDown += keyDownDuringReportGen;
-                trvAccount_AccountContacts.PreviewMouseLeftButtonUp += keyUpDuringReportGen;
+                MainGrid.MouseLeftButtonDown += MouseDownDuringReportGen;
+                MainGrid.MouseLeftButtonUp += MouseUpDuringReportGen;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonDown += MouseDownDuringReportGen;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonUp += MouseUpDuringReportGen;
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.DoWork += reportPreviewCacheWorker;
                 worker.RunWorkerCompleted += removeWorkingSpinner;
@@ -487,10 +507,10 @@ namespace ProLogicReportingApplication
         private void removeWorkingSpinner(object sender, RunWorkerCompletedEventArgs e)
         {
             WorkingSpinner.Visibility = Visibility.Hidden;
-            MainGrid.MouseLeftButtonDown -= keyDownDuringReportGen;
-            MainGrid.MouseLeftButtonUp -= keyUpDuringReportGen;
-            trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= keyDownDuringReportGen;
-            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= keyUpDuringReportGen;
+            MainGrid.MouseLeftButtonDown -= MouseDownDuringReportGen;
+            MainGrid.MouseLeftButtonUp -= MouseUpDuringReportGen;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= MouseDownDuringReportGen;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= MouseUpDuringReportGen;
         }
 
         /// <summary>
@@ -586,10 +606,10 @@ namespace ProLogicReportingApplication
             try
             {
                 WorkingSpinner.Visibility = Visibility.Visible;
-                MainGrid.MouseLeftButtonDown += keyDownDuringEmailSend;
-                MainGrid.MouseLeftButtonUp += keyUpDuringEmailSend;
-                trvAccount_AccountContacts.PreviewMouseLeftButtonDown += keyDownDuringEmailSend;
-                trvAccount_AccountContacts.PreviewMouseLeftButtonUp += keyUpDuringEmailSend;
+                MainGrid.MouseLeftButtonDown += MouseDownDuringEmailSend;
+                MainGrid.MouseLeftButtonUp += MouseUpDuringEmailSend;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonDown += MouseDownDuringEmailSend;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonUp += MouseUpDuringEmailSend;
                 emailSendWorker.DoWork += SendEmail;
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
                 emailSendWorker.RunWorkerAsync();                
@@ -660,10 +680,10 @@ namespace ProLogicReportingApplication
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
         {
             WorkingSpinner.Visibility = Visibility.Hidden;
-            MainGrid.MouseLeftButtonDown -= keyDownDuringEmailSend;
-            MainGrid.MouseLeftButtonUp -= keyUpDuringEmailSend;
-            trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= keyDownDuringEmailSend;
-            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= keyUpDuringEmailSend;
+            MainGrid.MouseLeftButtonDown -= MouseDownDuringEmailSend;
+            MainGrid.MouseLeftButtonUp -= MouseUpDuringEmailSend;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= MouseDownDuringEmailSend;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= MouseUpDuringEmailSend;
             Nucleus.Agent _agent = new Nucleus.Agent();
             proLogic_ActivityGuids = proLogic_StartActivities.ConvertAll<Guid>(x => new Guid(x));
             _agent.PostXmlForSyspro(proLogic_ActivityGuids, proLogic_SentProposal);
