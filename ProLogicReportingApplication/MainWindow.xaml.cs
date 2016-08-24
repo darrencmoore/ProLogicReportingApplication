@@ -481,7 +481,6 @@ namespace ProLogicReportingApplication
         {
             try
             {
-                MessageBox.Show("Billing Application is Generating Reports.  Please Wait.");
                 WorkingSpinner.Visibility = Visibility.Visible;
                 MainGrid.MouseLeftButtonDown += MouseDownDuringReportGen;
                 MainGrid.MouseLeftButtonUp += MouseUpDuringReportGen;
