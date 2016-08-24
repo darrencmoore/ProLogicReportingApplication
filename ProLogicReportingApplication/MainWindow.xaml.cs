@@ -13,6 +13,7 @@ using CrystalDecisions.Shared;
 using CrystalDecisions.CrystalReports.Engine;
 using System.Media;
 using System.Threading;
+using System.Windows.Input;
 
 /// <summary>
 /// Created By Darren Moore
@@ -61,6 +62,28 @@ namespace ProLogicReportingApplication
             contractId = "00002";
             LoadContacts(contractId);
         }
+
+        #region Handlers for UI during Regport Gen and Emailing
+        private void keyDownDuringReportGen(object sender, MouseEventArgs e)
+        {
+            MessageBox.Show("Billing Application is generating reports please wait.");
+        }
+
+        private void keyUpDuringReportGen(object sender, MouseEventArgs e)
+        {
+            MessageBox.Show("Billing Application is generating reports please wait.");
+        }
+
+        private void keyDownDuringEmailSend(object sender, MouseEventArgs e)
+        {
+            MessageBox.Show("Billing Application is emailing proposals please wait.");
+        }
+
+        private void keyUpDuringEmailSend(object sender, MouseEventArgs e)
+        {
+            MessageBox.Show("Billing Application is emailing proposals please wait.");
+        }
+        #endregion
 
         #region Create Cache Dir
         /// <summary>
@@ -430,6 +453,8 @@ namespace ProLogicReportingApplication
         #region Agent Report Cache BackgroundWorker
         /// <summary>
         /// Worker for Caching reports. Calls reportPreviewCacheWorker to cache genereated reports
+        /// Also adds handlers for PreviewMouseDown and PreviewMouseUp to stop user ineraction 
+        /// until report gen has completed
         /// </summary>
         /// <param name="reportsReadyForCache"></param>
         private void AgentReportCacheWorker(List<KeyValuePair<string, string>> reportsReadyForCache)
@@ -437,6 +462,10 @@ namespace ProLogicReportingApplication
             try
             {
                 WorkingSpinner.Visibility = Visibility.Visible;
+                MainGrid.MouseLeftButtonDown += keyDownDuringReportGen;
+                MainGrid.MouseLeftButtonUp += keyUpDuringReportGen;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonDown += keyDownDuringReportGen;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonUp += keyUpDuringReportGen;
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.DoWork += reportPreviewCacheWorker;
                 worker.RunWorkerCompleted += removeWorkingSpinner;
@@ -448,10 +477,20 @@ namespace ProLogicReportingApplication
             }            
         }
 
-
+        /// <summary>
+        /// worker completed method removes the working spinner after reports have 
+        /// completed generating.  Also removes the PreviewMouseDown and PreviewMouseUp Handlers 
+        /// for the maingrid and treeview
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void removeWorkingSpinner(object sender, RunWorkerCompletedEventArgs e)
         {
             WorkingSpinner.Visibility = Visibility.Hidden;
+            MainGrid.MouseLeftButtonDown -= keyDownDuringReportGen;
+            MainGrid.MouseLeftButtonUp -= keyUpDuringReportGen;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= keyDownDuringReportGen;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= keyUpDuringReportGen;
         }
 
         /// <summary>
@@ -536,7 +575,9 @@ namespace ProLogicReportingApplication
 
         #region Send Bid Click
         /// <summary>
-        /// Starts a background worker thread SendEmail  
+        /// Starts a background worker thread SendEmail
+        /// Also starts the working spinner. Also adds handlers for PreviewMouseDown and PreviewMouseUp 
+        /// to stop user ineraction until report gen has completed
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -545,6 +586,10 @@ namespace ProLogicReportingApplication
             try
             {
                 WorkingSpinner.Visibility = Visibility.Visible;
+                MainGrid.MouseLeftButtonDown += keyDownDuringEmailSend;
+                MainGrid.MouseLeftButtonUp += keyUpDuringEmailSend;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonDown += keyDownDuringEmailSend;
+                trvAccount_AccountContacts.PreviewMouseLeftButtonUp += keyUpDuringEmailSend;
                 emailSendWorker.DoWork += SendEmail;
                 emailSendWorker.RunWorkerCompleted += PostToSyspro;
                 emailSendWorker.RunWorkerAsync();                
@@ -553,8 +598,8 @@ namespace ProLogicReportingApplication
             {
                 MessageBox.Show(SendBindClickException.ToString());
             }           
-        }
-        #endregion       
+        }        
+        #endregion
 
         #region Email Send
         /// <summary>
@@ -613,8 +658,12 @@ namespace ProLogicReportingApplication
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
-        {      
+        {
             WorkingSpinner.Visibility = Visibility.Hidden;
+            MainGrid.MouseLeftButtonDown -= keyDownDuringEmailSend;
+            MainGrid.MouseLeftButtonUp -= keyUpDuringEmailSend;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= keyDownDuringEmailSend;
+            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= keyUpDuringEmailSend;
             Nucleus.Agent _agent = new Nucleus.Agent();
             proLogic_ActivityGuids = proLogic_StartActivities.ConvertAll<Guid>(x => new Guid(x));
             _agent.PostXmlForSyspro(proLogic_ActivityGuids, proLogic_SentProposal);
