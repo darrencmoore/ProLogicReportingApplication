@@ -150,7 +150,7 @@ namespace ProLogicReportingApplication
         public string LoadContacts(string contractId)
         { 
             try
-            {               
+            {                
                 List<KeyValuePair<string, string>> ToBeCachedReports = new List<KeyValuePair<string, string>>();
                 Nucleus.Agent _agent = new Nucleus.Agent();
                 _agent.GetContacts(contractId);

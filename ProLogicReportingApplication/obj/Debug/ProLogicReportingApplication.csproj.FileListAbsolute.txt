@@ -33,7 +33,6 @@ C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplicati
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\CrystalDecisions.ReportAppServer.CommonObjectModel.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\CrystalDecisions.ReportAppServer.ObjectFactory.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\log4net.dll
-C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\ProLogicBid.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\SAPBusinessObjects.WPF.ViewerShared.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\CrystalDecisions.ReportAppServer.CommonControls.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\stdole.dll
@@ -41,8 +40,6 @@ C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplicati
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\ShockwaveFlashObjects.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\FontAwesome.WPF.xml
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\Nucleus.pdb
-C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\ProLogicBid.pdb
-C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\ProLogicBid.xml
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\de\Xceed.Wpf.AvalonDock.resources.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\es\Xceed.Wpf.AvalonDock.resources.dll
 C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\bin\Debug\fr\Xceed.Wpf.AvalonDock.resources.dll
