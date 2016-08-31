@@ -14,6 +14,7 @@ using CrystalDecisions.CrystalReports.Engine;
 using System.Media;
 using System.Threading;
 using System.Windows.Input;
+using System.Configuration;
 
 /// <summary>
 /// Created By Darren Moore
@@ -32,6 +33,7 @@ namespace ProLogicReportingApplication
         private static string contractId;
         //private static string PATH_CONTRACTBIDREPORT = @"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt";
         private static string PATH_CONTRACTBIDREPORT = @"N:\Other Things\CustomCode\SYSPROReporting\Bid\Report\ContractBidReport.rpt";
+        private static string PATH_CONFIGFILE = @"N:\Other Things\CustomCode\SYSPROReporting\Bid\Program\ProLogic.config";
         private static BackgroundWorker emailSendWorker = new BackgroundWorker();
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private ReportDocument contractBidReportPreview = new ReportDocument();
@@ -47,7 +49,10 @@ namespace ProLogicReportingApplication
         private string accountNumAndName;
         private string accountItemTag;
         private string empItemTag;
-        
+        private static string proLogicEmailAddress;
+        private static string proLogicEmailPassword;
+
+
 
         public MainWindow()
         {
@@ -57,10 +62,11 @@ namespace ProLogicReportingApplication
             _createReportCacheDirWorker.RunWorkerAsync();
 
             //string[] args = Environment.GetCommandLineArgs();
+            //args[1] = "00002";
             //MessageBox.Show(args[1]);
             // pass args[1] to LoadContacts 
             // Call to Nucleus to get the data to populate the tree view           
-            contractId = "00002";
+            contractId = "00002";            
             LoadContacts(contractId);
         }
 
@@ -522,6 +528,12 @@ namespace ProLogicReportingApplication
         /// <param name="e"></param>
         void reportPreviewCacheWorker(object sender, DoWorkEventArgs e)
         {
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
+            configMap.ExeConfigFilename = PATH_CONFIGFILE;
+            Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
+            proLogicEmailAddress = config.AppSettings.Settings["EmailAddress"].Value;
+            proLogicEmailPassword = config.AppSettings.Settings["EmailPassword"].Value;
+
             List<KeyValuePair<string, string>> reportsReadyForCache = (List<KeyValuePair<string, string>>)e.Argument;
             foreach(KeyValuePair<string, string> combo_contractaccount in reportsReadyForCache)
             {
@@ -626,6 +638,7 @@ namespace ProLogicReportingApplication
         #region Email Send
         /// <summary>
         /// Send a email to a list of recipients
+        /// Then clears the email list
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -642,7 +655,7 @@ namespace ProLogicReportingApplication
 
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
-                    msg.From = new MailAddress("bob@360sheetmetal.com");
+                    msg.From = new MailAddress(proLogicEmailAddress.Trim());
                     _to = proLogic_EmailRecipients[i].Remove(0, 42);
                     msg.To.Add(new MailAddress(_to.Substring(0, _to.LastIndexOf("_"))));                    
                     msg.Body = "Email Sent from Bid Report Application";                    
@@ -655,7 +668,7 @@ namespace ProLogicReportingApplication
                     smtp.EnableSsl = true;
                     smtp.UseDefaultCredentials = false;
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    smtp.Credentials = new NetworkCredential("darrenm@360sheetmetal.com", "L14ei5g00d360");
+                    smtp.Credentials = new NetworkCredential(proLogicEmailAddress.Trim(), proLogicEmailPassword.Trim());
                     smtp.Send(msg);
                     SystemSounds.Exclamation.Play();
 
