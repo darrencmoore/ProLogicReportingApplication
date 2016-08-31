@@ -30,7 +30,8 @@ namespace ProLogicReportingApplication
         private static string PATH_REPORTCACHEDIR = @"C:\AgentReportCache\";
         private static string SmtpServer = "smtp.office365.com";
         private static string contractId;
-        private static string PATH_CONTRACTBIDREPORT = @"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt";
+        //private static string PATH_CONTRACTBIDREPORT = @"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt";
+        private static string PATH_CONTRACTBIDREPORT = @"N:\Other Things\CustomCode\SYSPROReporting\Bid\Report\ContractBidReport.rpt";
         private static BackgroundWorker emailSendWorker = new BackgroundWorker();
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private ReportDocument contractBidReportPreview = new ReportDocument();
@@ -661,7 +662,8 @@ namespace ProLogicReportingApplication
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
                     proLogic_SentProposal.Add(bidProposal);
-                }                
+                }
+                proLogic_EmailRecipients.Clear();                
             }
             catch (Exception SendEmailException)
             {
@@ -675,6 +677,7 @@ namespace ProLogicReportingApplication
         /// Removes the working spinner
         /// passes the proLogic_ActivityGuids and proLogic_SentProposal to Nuclues.Agent
         /// for XML String Building
+        /// I clear proLogic_StartActivities to et = 0 after sending 
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -685,11 +688,24 @@ namespace ProLogicReportingApplication
             MainGrid.MouseLeftButtonDown -= MouseDownDuringEmailSend;
             MainGrid.MouseLeftButtonUp -= MouseUpDuringEmailSend;
             trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= MouseDownDuringEmailSend;
-            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= MouseUpDuringEmailSend;
-            Nucleus.Agent _agent = new Nucleus.Agent();
+            trvAccount_AccountContacts.PreviewMouseLeftButtonUp -= MouseUpDuringEmailSend;            
             proLogic_ActivityGuids = proLogic_StartActivities.ConvertAll<Guid>(x => new Guid(x));
+            BackgroundWorker postToSysproWorker = new BackgroundWorker();
+            postToSysproWorker.DoWork += SysproActivityPost;
+            postToSysproWorker.RunWorkerCompleted += CleanUpProLogicLists;
+            postToSysproWorker.RunWorkerAsync();                      
+        }
+        private void SysproActivityPost(object sender, DoWorkEventArgs e)
+        {
+            Nucleus.Agent _agent = new Nucleus.Agent();
             _agent.PostXmlForSyspro(proLogic_ActivityGuids, proLogic_SentProposal);
         }
-        #endregion        
+        private void CleanUpProLogicLists(object sender, RunWorkerCompletedEventArgs e)
+        {
+            proLogic_StartActivities.Clear();
+            proLogic_ActivityGuids.Clear();
+            proLogic_SentProposal.Clear();
+        }
+        #endregion       
     }
 }
