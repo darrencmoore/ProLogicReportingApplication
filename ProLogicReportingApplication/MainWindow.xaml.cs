@@ -50,6 +50,7 @@ namespace ProLogicReportingApplication
         private string accountItemTag;
         private string empItemTag;
         private static string proLogicEmailAddress;
+        private static string proLogicBccEmailAddress;
         private static string proLogicEmailPassword;
 
 
@@ -532,6 +533,7 @@ namespace ProLogicReportingApplication
             configMap.ExeConfigFilename = PATH_CONFIGFILE;
             Configuration config = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
             proLogicEmailAddress = config.AppSettings.Settings["EmailAddress"].Value;
+            proLogicBccEmailAddress = config.AppSettings.Settings["BccEmailAddress"].Value;
             proLogicEmailPassword = config.AppSettings.Settings["EmailPassword"].Value;
 
             List<KeyValuePair<string, string>> reportsReadyForCache = (List<KeyValuePair<string, string>>)e.Argument;
@@ -657,7 +659,8 @@ namespace ProLogicReportingApplication
                     msg.Subject = "Bid Proposal";
                     msg.From = new MailAddress(proLogicEmailAddress.Trim());
                     _to = proLogic_EmailRecipients[i].Remove(0, 42);
-                    msg.To.Add(new MailAddress(_to.Substring(0, _to.LastIndexOf("_"))));                    
+                    msg.To.Add(new MailAddress(_to.Substring(0, _to.LastIndexOf("_"))));
+                    msg.Bcc.Add(new MailAddress(proLogicBccEmailAddress.Trim()));                    
                     msg.Body = "Email Sent from Bid Report Application";                    
                     Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNumAndName + ".pdf");
                     bidProposal.Name = "Bid Proposal - Job Name: " + accountNumAndName.Remove(0, 4) + ".pdf";
@@ -670,7 +673,7 @@ namespace ProLogicReportingApplication
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                     smtp.Credentials = new NetworkCredential(proLogicEmailAddress.Trim(), proLogicEmailPassword.Trim());
                     smtp.Send(msg);
-                    SystemSounds.Exclamation.Play();
+                    SystemSounds.Exclamation.Play();                    
 
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
@@ -694,10 +697,10 @@ namespace ProLogicReportingApplication
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e)
+        private void PostToSyspro(object sender, RunWorkerCompletedEventArgs e) 
         {
             WorkingSpinner.Visibility = Visibility.Hidden;
-            MessageBox.Show("Emails Sent Successfully");
+            //MessageBox.Show("Emails Sent Successfully");
             MainGrid.MouseLeftButtonDown -= MouseDownDuringEmailSend;
             MainGrid.MouseLeftButtonUp -= MouseUpDuringEmailSend;
             trvAccount_AccountContacts.PreviewMouseLeftButtonDown -= MouseDownDuringEmailSend;
