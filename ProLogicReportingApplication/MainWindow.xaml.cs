@@ -18,6 +18,7 @@ using System.Configuration;
 using System.Windows.Media;
 using System.Text.RegularExpressions;
 
+
 /// <summary>
 /// Created By Darren Moore
 /// </summary>
@@ -50,12 +51,14 @@ namespace ProLogicReportingApplication
         private TreeViewItem empEmailAddrItem = new TreeViewItem();
         private string emailRecipient;
         private string accountNumAndName;
-        private string currentRevision;
+        private string contractCurrentRevision;
+        private string contractContactRevision;
         private string accountItemTag;
         private string empItemTag;
         private static string proLogicEmailAddress;
         private static string proLogicBccEmailAddress;
         private static string proLogicEmailPassword;
+        private bool boxChecked;
 
         public MainWindow()
         {
@@ -144,6 +147,7 @@ namespace ProLogicReportingApplication
             DirectoryInfo cachedFiles = new DirectoryInfo(PATH_REPORTCACHEDIR);
             foreach(FileInfo cachedFile in cachedFiles.GetFiles())
             {
+                // Fix this delete if the file is open
                 cachedFile.Delete();
             }
         }
@@ -206,8 +210,8 @@ namespace ProLogicReportingApplication
         private void trvAccount_AccountContactsLoaded(object sender, RoutedEventArgs e)
         {        
             TreeView tree = sender as TreeView;
-            int empTracker = 0; 
-
+            int empTracker = 0;
+            
             try
             {                
                 for (int i = 0; i < proLogic_ContractContactsObservable.Count; i++)
@@ -240,20 +244,26 @@ namespace ProLogicReportingApplication
                         empItem.Tag = empItemTag;
                         empItem.FontWeight = FontWeights.Black;
                         CheckBox empItemCheckBox = new CheckBox();
-                        empItemCheckBox.IsChecked = true;
                         empItemCheckBox.IsEnabled = true;
                         empItemCheckBox.Focusable = true;
                         empItemCheckBox.Name = "ChildChkBox";
-                        if(proLogic_ContractContactsObservable[i].Contains("False"))
+
+                        if (proLogic_ContractContactsObservable[i].Contains("False"))
                         {
+                            boxChecked = false;
                             proLogic_ContractContactsObservable[i] = proLogic_ContractContactsObservable[i].Replace("False", "");
                             empItemCheckBox.Foreground = Brushes.Red;
+                            empItemCheckBox.IsChecked = true;
                         }
+
                         else if(proLogic_ContractContactsObservable[i].Contains("True"))
                         {
+                            boxChecked = true;
                             proLogic_ContractContactsObservable[i] = proLogic_ContractContactsObservable[i].Replace("True", "");
                             empItemCheckBox.Foreground = Brushes.Green;
-                        }                        
+                            empItemCheckBox.IsChecked = false;
+                        } 
+                                               
                         empItemCheckBox.Content = proLogic_ContractContactsObservable[i].Remove(0, 4).Replace("{ Header = Item Level 1 }", "").Trim();
                         empItemCheckBox.Click += mouseClickHandler;
                         empItem.Header = empItemCheckBox;
@@ -264,7 +274,7 @@ namespace ProLogicReportingApplication
                     {
                         empTracker++;
                         empEmailAddrItem = new TreeViewItem();
-                        empEmailAddrItem.Tag = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "").Trim() + "_" + accountItemTag.Replace("{Parent}", "").Trim(); //+ "_" + empTracker;
+                        empEmailAddrItem.Tag = proLogic_ContractContactsObservable[i].Replace("{ Header = Item Level 2 }", "").Trim() + "_" + accountItemTag.Replace("{Parent}", "").Trim(); 
                         empEmailAddrItem.FontWeight = FontWeights.Black;
                         CheckBox empEmailAddrCheckBox = new CheckBox();
                         empEmailAddrCheckBox.IsChecked = true;
@@ -275,8 +285,11 @@ namespace ProLogicReportingApplication
                         empEmailAddrCheckBox.Content = proLogic_ContractContactsObservable[i];
                         empEmailAddrCheckBox.Click += mouseClickHandler;
                         empEmailAddrItem.Header = empEmailAddrCheckBox;
-                        empItem.Items.Add(empEmailAddrItem);                        
-                        proLogic_EmailRecipients.Add(empEmailAddrItem.Tag.ToString());
+                        empItem.Items.Add(empEmailAddrItem); 
+                        if(boxChecked)
+                        {
+                            proLogic_EmailRecipients.Add(empEmailAddrItem.Tag.ToString());
+                        }                        
                     }
                 }
             }
@@ -669,12 +682,11 @@ namespace ProLogicReportingApplication
                 for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {                    
                     accountNumAndName = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
-                    currentRevision = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('{'));
-                    currentRevision = currentRevision.Substring(0, 3);
-                    currentRevision = currentRevision.Replace("{", "").Replace("}", "").Trim();
+                    contractCurrentRevision = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('{'));
+                    contractCurrentRevision = contractCurrentRevision.Substring(0, 3);
+                    contractCurrentRevision = contractCurrentRevision.Replace("{", "").Replace("}", "").Trim();
                     _startActivity = proLogic_EmailRecipients[i].Remove(0, 5);
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
-
 
                     MailMessage msg = new MailMessage();
                     msg.Subject = "Bid Proposal";
@@ -688,8 +700,7 @@ namespace ProLogicReportingApplication
                     msg.Body = "Email Sent from Bid Report Application";                    
                     Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNumAndName + ".pdf"); 
                     bidProposal.Name = "Bid Proposal - Job Name: " + accountNumAndName.Remove(0, 4) + ".pdf";
-                    msg.Attachments.Add(bidProposal);
-                    
+                    msg.Attachments.Add(bidProposal);                    
 
                     SmtpClient smtp = new SmtpClient(SmtpServer);
                     smtp.Port = 587;
@@ -698,12 +709,11 @@ namespace ProLogicReportingApplication
                     smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
                     smtp.Credentials = new NetworkCredential(proLogicEmailAddress.Trim(), proLogicEmailPassword.Trim());
                     smtp.Send(msg);
-                    SystemSounds.Exclamation.Play();                    
-
-                    
+                    SystemSounds.Exclamation.Play();
+                                        
                     bidProposal.Name = PATH_REPORTCACHEDIR + contractId + accountNumAndName + ".pdf";
                     proLogic_SentProposal.Add(bidProposal);
-                    proLogic_Revisions.Add(currentRevision);
+                    proLogic_Revisions.Add(contractCurrentRevision);
                 }
                 proLogic_EmailRecipients.Clear();                
             }
