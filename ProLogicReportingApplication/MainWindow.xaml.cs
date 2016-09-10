@@ -51,6 +51,7 @@ namespace ProLogicReportingApplication
         private TreeViewItem empEmailAddrItem = new TreeViewItem();
         private string emailRecipient;
         private string accountNumAndName;
+        private string accountNum;
         private string contractCurrentRevision;
         private string contractContactRevision;
         private string accountItemTag;
@@ -67,12 +68,12 @@ namespace ProLogicReportingApplication
             _createReportCacheDirWorker.DoWork += CreateReportCacheDir;
             _createReportCacheDirWorker.RunWorkerAsync();
 
-            //string[] args = Environment.GetCommandLineArgs();
+            string[] args = Environment.GetCommandLineArgs();
             //args[1] = "00002";
             //MessageBox.Show(args[1]);
             // pass args[1] to LoadContacts 
             // Call to Nucleus to get the data to populate the tree view           
-            contractId = "00002";            
+            contractId = args[1].Trim();            
             LoadContacts(contractId);
         }
 
@@ -682,6 +683,7 @@ namespace ProLogicReportingApplication
                 for (int i = 0; i < proLogic_EmailRecipients.Count; i++)
                 {                    
                     accountNumAndName = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('_') + 1);
+                    accountNum = accountNumAndName.Substring(0, 4);
                     contractCurrentRevision = proLogic_EmailRecipients[i].Substring(proLogic_EmailRecipients[i].LastIndexOf('{'));
                     contractCurrentRevision = contractCurrentRevision.Substring(0, 3);
                     contractCurrentRevision = contractCurrentRevision.Replace("{", "").Replace("}", "").Trim();
@@ -710,6 +712,9 @@ namespace ProLogicReportingApplication
                     smtp.Credentials = new NetworkCredential(proLogicEmailAddress.Trim(), proLogicEmailPassword.Trim());
                     smtp.Send(msg);
                     SystemSounds.Exclamation.Play();
+
+                    Nucleus.Agent _agent = new Nucleus.Agent();
+                    _agent.UpdateBidStatus(contractId, accountNum);
                                         
                     bidProposal.Name = PATH_REPORTCACHEDIR + contractId + accountNumAndName + ".pdf";
                     proLogic_SentProposal.Add(bidProposal);
