@@ -73,7 +73,7 @@ namespace ProLogicReportingApplication
             //MessageBox.Show(args[1]);
             // pass args[1] to LoadContacts 
             // Call to Nucleus to get the data to populate the tree view           
-            contractId = args[1].Trim();            
+            contractId = "00002"; //args[1].Trim();            
             LoadContacts(contractId);
         }
 
