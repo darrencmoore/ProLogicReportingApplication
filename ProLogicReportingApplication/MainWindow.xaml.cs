@@ -36,7 +36,8 @@ namespace ProLogicReportingApplication
         public static string contractId;
         //private static string PATH_CONTRACTBIDREPORT = @"C:\Users\darrenm\Desktop\ProLogicReportingApplication\ProLogicReportingApplication\ContractBidReport.rpt";
         private static string PATH_CONTRACTBIDREPORT = @"N:\Other Things\CustomCode\SYSPROReporting\Bid\Report\ContractBidReport.rpt";
-        private static string PATH_CONFIGFILE = @"N:\Other Things\CustomCode\SYSPROReporting\Bid\Program\ProLogic.config";
+        //private static string PATH_CONFIGFILE = @"N:\Other Things\CustomCode\SYSPROReporting\Bid\Program\ProLogic.config";
+        private static string PATH_CONFIGFILE = @"C:\temp\ProLogic.config";
         private static BackgroundWorker emailSendWorker = new BackgroundWorker();
         private ObservableCollection<string> proLogic_ContractContactsObservable = new ObservableCollection<string>();
         private ReportDocument contractBidReportPreview = new ReportDocument();
@@ -59,6 +60,8 @@ namespace ProLogicReportingApplication
         private static string proLogicEmailAddress;
         private static string proLogicBccEmailAddress;
         private static string proLogicEmailPassword;
+        private static string proLogicEmailSubject;
+        private static string proLogicEmailBody;
         private bool boxChecked;
 
         public MainWindow()
@@ -564,6 +567,8 @@ namespace ProLogicReportingApplication
             proLogicEmailAddress = config.AppSettings.Settings["EmailAddress"].Value;
             proLogicBccEmailAddress = config.AppSettings.Settings["BccEmailAddress"].Value;
             proLogicEmailPassword = config.AppSettings.Settings["EmailPassword"].Value;
+            proLogicEmailSubject = config.AppSettings.Settings["EmailSubject"].Value;
+            proLogicEmailBody = config.AppSettings.Settings["EmailBody"].Value;
 
             List<KeyValuePair<string, string>> reportsReadyForCache = (List<KeyValuePair<string, string>>)e.Argument;
             foreach(KeyValuePair<string, string> combo_contractaccount in reportsReadyForCache)
@@ -691,7 +696,7 @@ namespace ProLogicReportingApplication
                     proLogic_StartActivities.Add(_startActivity.Substring(0, _startActivity.IndexOf("_")));
 
                     MailMessage msg = new MailMessage();
-                    msg.Subject = "Bid Proposal";
+                    msg.Subject = proLogicEmailSubject.Trim();
                     msg.From = new MailAddress(proLogicEmailAddress.Trim());
                     proLogic_EmailRecipients[i] = proLogic_EmailRecipients[i].Remove(0, 42);
                     int index = proLogic_EmailRecipients[i].IndexOf("{");
@@ -699,7 +704,7 @@ namespace ProLogicReportingApplication
                     _to = proLogic_EmailRecipients[i];
                     msg.To.Add(new MailAddress(_to));
                     msg.Bcc.Add(new MailAddress(proLogicBccEmailAddress.Trim()));                    
-                    msg.Body = "Email Sent from Bid Report Application";                    
+                    msg.Body = proLogicEmailBody.Trim();                    
                     Attachment bidProposal = new Attachment(PATH_REPORTCACHEDIR + contractId + accountNumAndName + ".pdf"); 
                     bidProposal.Name = "Bid Proposal - Job Name: " + accountNumAndName.Remove(0, 4) + ".pdf";
                     msg.Attachments.Add(bidProposal);                    
